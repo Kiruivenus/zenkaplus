@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nyota Cash | Simple Loans for Everyday Kenyan Goals</title>
+  <meta name="description" content="Access fast, transparent, and flexible digital loans for education, business, personal, and emergency needs. Apply in minutes directly from your phone.">
+  
+  <!-- Google Fonts - Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Premium styling stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Glassmorphic Header -->
+  <header class="main-header">
+    <div class="container header-container">
+      <a href="#hero" class="brand-logo" id="brand-logo-btn">
+        <svg class="star-logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L14.8 8.6L22 9.2L16.5 13.8L18.2 20.8L12 17.2L5.8 20.8L7.5 13.8L2 9.2L9.2 8.6L12 2Z" fill="currentColor"/>
+        </svg>
+        <span class="brand-text">Nyota<span class="accent-text">Cash</span></span>
+      </a>
+      
+      <!-- Mobile Menu Button -->
+      <button class="mobile-menu-toggle" id="menu-toggle" aria-label="Toggle Navigation Menu">
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+      </button>
+
+      <!-- Desktop & Mobile Navbar -->
+      <nav class="navbar" id="navbar">
+        <ul class="nav-links">
+          <li><a href="#how-it-works" class="nav-link-item">How It Works</a></li>
+          <li><a href="#loan-options" class="nav-link-item">Loan Options</a></li>
+          <li><a href="#why-choose-us" class="nav-link-item">Why Nyota</a></li>
+          <li><a href="#rates" class="nav-link-item">Rates</a></li>
+        </ul>
+        <div class="nav-cta">
+          <button class="btn btn-primary start-app-btn">Apply Now</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main>
+    
+    <!-- ==================== LANDING PAGE VIEW ==================== -->
+    <div id="landing-view" class="view-section active">
+      
+      <!-- Hero Section -->
+      <section class="hero-section" id="hero">
+        <div class="container hero-container">
+          <div class="hero-left-col">
+            <div class="hero-content">
+              <h1 class="hero-title">Get first loan online within <span class="highlight-gold">15 minutes</span></h1>
+              <p class="hero-subtitle">Fast and safe apply</p>
+            </div>
+            
+            <!-- Hero Interactive Card Widget -->
+            <div class="hero-widget">
+              <div class="widget-card">
+                <div class="widget-header">
+                  <h3>Select the loan amount</h3>
+                </div>
+                
+                <div class="widget-body">
+                  <div class="slider-group">
+                    <div class="slider-labels">
+                      <span class="label-text">Loan amount</span>
+                      <span class="slider-value" id="hero-slider-value">KES 35,000</span>
+                    </div>
+                    <input type="range" id="hero-loan-slider" min="10000" max="100000" step="5000" value="35000" class="range-slider">
+                    <div class="slider-min-max">
+                      <span>KES 10,000</span>
+                      <span>KES 55,000</span>
+                      <span>KES 100,000</span>
+                    </div>
+                  </div>
+
+                  <!-- Hidden repayment period to maintain app.js math capability -->
+                  <div class="period-group" style="display: none;">
+                    <span>Repayment Period</span>
+                    <div class="period-tabs">
+                      <button class="period-tab active" data-months="1">1 Month</button>
+                      <button class="period-tab" data-months="2">2 Months</button>
+                      <button class="period-tab" data-months="3">3 Months</button>
+                      <button class="period-tab" data-months="6">6 Months</button>
+                    </div>
+                  </div>
+
+                  <div class="summary-details">
+                    <div class="summary-row total-row">
+                      <span class="label-settlement">Settlement amount</span>
+                      <strong id="hero-total-val" class="val-settlement">KES 36,225</strong>
+                    </div>
+                  </div>
+                  
+                  <button class="btn btn-gold btn-full start-app-btn" style="margin-top: 1.5rem;">Apply for a loan</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="hero-right-col">
+            <div class="hero-illustration">
+              <img src="nyotacash_hero.png" alt="NyotaCash" class="hero-couple-img">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== HOW TO BORROW MONEY ==================== -->
+      <section class="how-to-borrow" id="how-it-works">
+        <div class="container">
+          <h2 class="section-title-blue text-center">How to borrow money</h2>
+          
+          <div class="borrow-steps-list">
+            <div class="borrow-step-row">
+              <div class="borrow-step-badge">1</div>
+              <div class="borrow-step-text">
+                <h3>Leave a request on app</h3>
+                <p>You can leave a request by filling out the form</p>
+              </div>
+            </div>
+            
+            <div class="borrow-step-row">
+              <div class="borrow-step-badge">2</div>
+              <div class="borrow-step-text">
+                <h3>Wait for the decision</h3>
+                <p>The decision is made in just 15 minutes</p>
+              </div>
+            </div>
+            
+            <div class="borrow-step-row">
+              <div class="borrow-step-badge">3</div>
+              <div class="borrow-step-text">
+                <h3>Receive money</h3>
+                <p>The transaction usually takes just 1 minute</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="text-center" style="margin-top: 2.5rem;">
+            <button class="btn btn-gold btn-large start-app-btn">Apply for a loan</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== CUSTOMER REVIEWS ==================== -->
+      <section class="customer-reviews-section">
+        <div class="container">
+          <h2 class="section-title-blue text-center">Customer reviews</h2>
+          
+          <div class="carousel-container">
+            <div class="carousel-track-wrapper">
+              <div class="carousel-track" id="reviews-track">
+                
+                <!-- Slide 1 -->
+                <div class="review-slide active">
+                  <div class="review-card-layout">
+                    <div class="reviewer-header">
+                      <div class="reviewer-avatar">JA</div>
+                      <div class="reviewer-info">
+                        <h3>Jane Adhiambo</h3>
+                      </div>
+                    </div>
+                    <div class="review-content-box">
+                      <p>"The process of applying for the loan is very fast and elaborate, takes short time to process and absolutely very fair interest rates."</p>
+                    </div>
+                    <div class="review-date">15.08.2021</div>
+                  </div>
+                </div>
+
+                <!-- Slide 2 -->
+                <div class="review-slide">
+                  <div class="review-card-layout">
+                    <div class="reviewer-header">
+                      <div class="reviewer-avatar">KN</div>
+                      <div class="reviewer-info">
+                        <h3>Kamau Ndung'u</h3>
+                      </div>
+                    </div>
+                    <div class="review-content-box">
+                      <p>"Excellent digital experience! Immediate response time, automated MPESA STK push was highly secure, and funds was disbursed incredibly fast."</p>
+                    </div>
+                    <div class="review-date">20.09.2021</div>
+                  </div>
+                </div>
+
+                <!-- Slide 3 -->
+                <div class="review-slide">
+                  <div class="review-card-layout">
+                    <div class="reviewer-header">
+                      <div class="reviewer-avatar">MW</div>
+                      <div class="reviewer-info">
+                        <h3>Mercy Wanjiku</h3>
+                      </div>
+                    </div>
+                    <div class="review-content-box">
+                      <p>"I highly recommend Nyota Cash for anyone facing a short-term school fee or business emergency. The 0.2% excise payment is transparent."</p>
+                    </div>
+                    <div class="review-date">04.10.2021</div>
+                  </div>
+                </div>
+
+                <!-- Slide 4 -->
+                <div class="review-slide">
+                  <div class="review-card-layout">
+                    <div class="reviewer-header">
+                      <div class="reviewer-avatar">EK</div>
+                      <div class="reviewer-info">
+                        <h3>Emmanuel Kiprop</h3>
+                      </div>
+                    </div>
+                    <div class="review-content-box">
+                      <p>"Superb fintech support and absolutely seamless user dashboard. The client portal remembers draft applications beautifully!"</p>
+                    </div>
+                    <div class="review-date">12.11.2021</div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+ 
+             <!-- Left/Right Navigation Arrows -->
+             <button class="carousel-nav-btn prev-btn" id="carousel-prev-btn" aria-label="Previous Review">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+             </button>
+             <button class="carousel-nav-btn next-btn" id="carousel-next-btn" aria-label="Next Review">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+             </button>
+ 
+             <!-- Carousel Pagination Dots -->
+             <div class="carousel-dots" id="carousel-dots-container">
+               <span class="dot active" data-index="0"></span>
+               <span class="dot" data-index="1"></span>
+               <span class="dot" data-index="2"></span>
+               <span class="dot" data-index="3"></span>
+             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== OUR ADVANTAGES ==================== -->
+      <section class="our-advantages-section" id="why-choose-us">
+        <div class="container">
+          <h2 class="section-title-blue text-center">Our advantages</h2>
+          
+          <div class="advantages-grid">
+            <!-- Advantage 1 -->
+            <div class="advantage-card-premium">
+              <div class="advantage-card-header">
+                <div class="advantage-icon">⚖️</div>
+                <h3>Profitable</h3>
+              </div>
+              <p class="advantage-sub">Simple and quick solution at the tip of your fingers</p>
+              <ul class="advantage-bullets">
+                <li>Apply anywhere you are</li>
+                <li>Only one document is needed</li>
+              </ul>
+            </div>
+
+            <!-- Advantage 2 -->
+            <div class="advantage-card-premium">
+              <div class="advantage-card-header">
+                <div class="advantage-icon">👍</div>
+                <h3>Reliable</h3>
+              </div>
+              <p class="advantage-sub">Nyota Cash is a responsible direct lender with a new approach</p>
+              <ul class="advantage-bullets">
+                <li>We guarantee confidentiality and protection of your data</li>
+                <li>We are looking for solutions in difficult situations</li>
+              </ul>
+            </div>
+
+            <!-- Advantage 3 -->
+            <div class="advantage-card-premium">
+              <div class="advantage-card-header">
+                <div class="advantage-icon">📱</div>
+                <h3>Simple</h3>
+              </div>
+              <p class="advantage-sub">Simple and quick solution without leaving home in just 15 minutes</p>
+              <ul class="advantage-bullets">
+                <li>We transfer money instantly to your account</li>
+                <li>We give the opportunity to prolong the loan period</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== BORROW LOAN ONLINE & DETAILS ==================== -->
+      <section class="borrow-online-details-section" id="loan-options">
+        <div class="container">
+          <h2 class="section-title-blue text-center">Borrow loan online</h2>
+          
+          <div class="rates-text-block">
+            <h3>Looking for a quick loan?</h3>
+            <p>Get instant loans online within 15 minutes with Nyota Cash.</p>
+            
+            <h3>Who are we?</h3>
+            <p>Nyota Cash is the best service for online loans in Kenya, which are directly disbursed to MPESA. Unlike other loan services in Kenya, we offer simple and quick solution without leaving home in just 15 minutes with only one document needed.</p>
+            
+            <h3>How to apply for a loan?</h3>
+            <p>You just need to go to Nyota Cash web page, register online, and start applying for loans.</p>
+            
+            <h3>Why you should borrow loan online from Nyota Cash?</h3>
+            <p>You can simply apply anytime and anywhere through the Nyota Cash web site and get approved within 15 minutes. We give the opportunity to prolong the loan period. We guarantee confidentiality and protection of your data. Our Customer service are always looking for solutions in difficult situations.</p>
+            
+            <p class="web-promo-link"><a href="#hero">Use our website and get extra money when you need it &rarr;</a></p>
+
+            <div class="rates-table-disclosure" id="rates">
+              <h3>LOAN RATES AND FEES</h3>
+              <ul>
+                <li><strong>Loan Amounts:</strong> Ksh 10,000 to Ksh 100,000</li>
+                <li><strong>MINIMUM loan repayment period:</strong> 61 days including extend</li>
+                <li><strong>MAXIMUM loan repayment period:</strong> 365 days including loan extend.</li>
+                <li><strong>MINIMUM annual percentage rate (APR) including discount:</strong> 3.65%</li>
+                <li><strong>MAXIMUM annual percentage rate (APR) excluding stock:</strong> 803%</li>
+              </ul>
+              
+              <div class="representative-examples">
+                <p><strong>Representative loan example to apply MINIMUM interest rate with discount:</strong><br>
+                If you apply for Ksh 10,000 loan for 61 days under 1.0% per day, the total cost of the loan will be Ksh 16,100.</p>
+                
+                <p style="margin-top: 1rem;"><strong>Representative loan example to apply MAXIMUM interest rate:</strong><br>
+                If you apply for Ksh 10,000 loan for 61 days under 2.2% per day, the total cost of the loan will be Ksh 23,420.</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Address block right above footer -->
+          <div class="address-details-box text-center">
+            <p class="address-text">
+              P.O BOX 30834 G.P.O NAIROBI<br>
+              COUNTY: NAIROBI, DISTRICT: WESTLANDS DISTRICT<br>
+              LOCALITY: WESTLANDS<br>
+              STREET: RHAPTA ROAD, BUILDING: RHAPTA HEIGHTS
+            </p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ==================== APPLICATION FLOW VIEW ==================== -->
+    <div id="app-flow-view" class="view-section hidden">
+      <section class="form-section">
+        <div class="container form-container">
+          
+          <!-- Back to Landing Link -->
+          <div class="form-back-header">
+            <button class="btn-text-back" id="cancel-application-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="back-arrow-icon">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+              Back to Homepage
+            </button>
+          </div>
+
+          <!-- Application Box -->
+          <div class="form-card">
+            <!-- Progress Tracker -->
+            <div class="progress-tracker">
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-bar-fill"></div>
+              </div>
+              <div class="progress-steps">
+                <div class="progress-step-item active" id="step-node-1" data-step="1">
+                  <span class="step-circle">1</span>
+                  <span class="step-label">Personal</span>
+                </div>
+                <div class="progress-step-item" id="step-node-2" data-step="2">
+                  <span class="step-circle">2</span>
+                  <span class="step-label">Loan Request</span>
+                </div>
+                <div class="progress-step-item" id="step-node-3" data-step="3">
+                  <span class="step-circle">3</span>
+                  <span class="step-label">Background</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Form Container -->
+            <form id="loan-application-form" novalidate>
+              
+              <!-- STEP 1: Personal Details -->
+              <div class="form-step-content active" id="form-step-1">
+                <h2 class="form-step-title">Tell us about yourself</h2>
+                <p class="form-step-subtitle">Ensure these match your official identification documents.</p>
+                
+                <div class="input-group">
+                  <label for="fullName">Full Name</label>
+                  <input type="text" id="fullName" placeholder="e.g. John Kamau Mwangi" class="form-input" autocomplete="name" required>
+                  <span class="input-error-msg" id="error-fullName">Please enter your full name.</span>
+                </div>
+
+                <div class="input-group">
+                  <label for="phoneNumber">M-Pesa Phone Number</label>
+                  <div class="phone-input-wrapper">
+                    <span class="phone-prefix">+254</span>
+                    <input type="tel" id="phoneNumber" placeholder="712345678" class="form-input phone-input" autocomplete="tel" required>
+                  </div>
+                  <span class="input-hint">Enter your registered Safaricom number (e.g., 07XXXXXXXX or 7XXXXXXXX)</span>
+                  <span class="input-error-msg" id="error-phoneNumber">Please enter a valid Kenyan Safaricom number.</span>
+                </div>
+
+                <div class="input-group">
+                  <label for="idNumber">National ID Number</label>
+                  <input type="number" id="idNumber" placeholder="e.g. 12345678" class="form-input" autocomplete="off" required>
+                  <span class="input-error-msg" id="error-idNumber">Please enter your National ID number.</span>
+                </div>
+              </div>
+
+              <!-- STEP 2: Loan Request -->
+              <div class="form-step-content" id="form-step-2">
+                <h2 class="form-step-title">Configure Your Loan</h2>
+                <p class="form-step-subtitle">Select the loan purpose and adjust the financing size to fit your target.</p>
+                
+                <!-- Category Select Cards -->
+                <div class="input-group">
+                  <label>Loan Category</label>
+                  <div class="category-cards-grid">
+                    <div class="category-select-card active" data-category="Personal Loan">
+                      <div class="category-card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M21 12V7H5a2 2 0 0 1-2-2V5" />
+                          <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
+                          <path d="M16 12h6v4h-6z" />
+                        </svg>
+                      </div>
+                      <span>Personal Loan</span>
+                    </div>
+
+                    <div class="category-select-card" data-category="Education Loan">
+                      <div class="category-card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                          <path d="M6 12v5c0 2 2.5 3 6 3s6-1 6-3v-5" />
+                        </svg>
+                      </div>
+                      <span>Education Loan</span>
+                    </div>
+
+                    <div class="category-select-card" data-category="Business Loan">
+                      <div class="category-card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M3 3h18v18H3z" />
+                          <path d="M21 9H3M21 15H3M12 3v18" />
+                        </svg>
+                      </div>
+                      <span>Business Loan</span>
+                    </div>
+
+                    <div class="category-select-card" data-category="Skills Loan">
+                      <div class="category-card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                          <line x1="8" y1="21" x2="16" y2="21" />
+                          <line x1="12" y1="17" x2="12" y2="21" />
+                        </svg>
+                      </div>
+                      <span>Skills Loan</span>
+                    </div>
+
+                    <div class="category-select-card" data-category="Emergency Loan">
+                      <div class="category-card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                        </svg>
+                      </div>
+                      <span>Emergency Loan</span>
+                    </div>
+
+                    <div class="category-select-card" data-category="Startup Support">
+                      <div class="category-card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M4.5 16.5c-1.5 1.5-2.5 3.5-2.5 5.5C4 22 6 21 7.5 19.5" />
+                          <path d="M12 2C6 2 2 6 2 12c0 2.5 1 4.5 2.5 6l11.5-11.5C14.5 5 12.5 4 12 2z" />
+                          <path d="M12 2c6 0 10 4 10 10 0 .5-1 2.5-4.5 4.5L6 5C8 1.5 10 2 12 2z" />
+                        </svg>
+                      </div>
+                      <span>Startup Support</span>
+                    </div>
+                  </div>
+                  <input type="hidden" id="loanCategory" value="Personal Loan">
+                </div>
+
+                <!-- Loan Amount Slider -->
+                <div class="input-group">
+                  <div class="slider-header-flex">
+                    <label for="loanAmountSlider">Desired Loan Amount</label>
+                    <span class="calc-amount-display" id="form-amount-display">Ksh 10,000</span>
+                  </div>
+                  <input type="range" id="loanAmountSlider" min="10000" max="100000" step="5000" value="10000" class="range-slider">
+                  <div class="slider-min-max">
+                    <span>Ksh 10,000</span>
+                    <span>Ksh 100,000</span>
+                  </div>
+                </div>
+
+                <!-- Repayment Period -->
+                <div class="input-group">
+                  <label>Repayment Period</label>
+                  <div class="period-select-grid">
+                    <div class="period-option-card active" data-period="1">
+                      <span class="period-num">1</span>
+                      <span class="period-text">Month</span>
+                    </div>
+                    <div class="period-option-card" data-period="2">
+                      <span class="period-num">2</span>
+                      <span class="period-text">Months</span>
+                    </div>
+                    <div class="period-option-card" data-period="3">
+                      <span class="period-num">3</span>
+                      <span class="period-text">Months</span>
+                    </div>
+                    <div class="period-option-card" data-period="6">
+                      <span class="period-num">6</span>
+                      <span class="period-text">Months</span>
+                    </div>
+                  </div>
+                  <input type="hidden" id="repaymentPeriod" value="1">
+                </div>
+
+                <!-- Math Live Preview Card -->
+                <div class="math-preview-card">
+                  <div class="math-header">Interest Calculator</div>
+                  <div class="math-grid">
+                    <div class="math-cell">
+                      <span class="math-label">Interest Rate</span>
+                      <span class="math-value">3.5% Flat</span>
+                    </div>
+                    <div class="math-cell">
+                      <span class="math-label">Interest Fee</span>
+                      <span class="math-value" id="math-interest-fee">Ksh 350</span>
+                    </div>
+                    <div class="math-cell full-width">
+                      <span class="math-label">Total Repayment Amount</span>
+                      <span class="math-value highlight-amount" id="math-total-repay">Ksh 10,350</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- STEP 3: Background Details -->
+              <div class="form-step-content" id="form-step-3">
+                <h2 class="form-step-title">Additional Information</h2>
+                <p class="form-step-subtitle">This helps build a balanced profile for a better credit estimate.</p>
+                
+                <div class="input-group">
+                  <label for="educationLevel">Highest Education Level Completed</label>
+                  <select id="educationLevel" class="form-select" required>
+                    <option value="" disabled selected>Select level...</option>
+                    <option value="High School">High School Certificate</option>
+                    <option value="Diploma">College Diploma</option>
+                    <option value="Degree">University Degree</option>
+                    <option value="Postgraduate">Postgraduate Degree</option>
+                    <option value="Other">Other / Professional Training</option>
+                  </select>
+                  <span class="input-error-msg" id="error-educationLevel">Please select your education level.</span>
+                </div>
+
+                <div class="input-group">
+                  <label for="employmentStatus">Current Employment Status</label>
+                  <select id="employmentStatus" class="form-select" required>
+                    <option value="" disabled selected>Select employment status...</option>
+                    <option value="Employed">Full-time Employed</option>
+                    <option value="Self-Employed">Self-Employed / Business Owner</option>
+                    <option value="Freelance/Contractor">Contractor / Freelancer</option>
+                    <option value="Student">Student with Side Hustle</option>
+                    <option value="Unemployed">Other / Unemployed</option>
+                  </select>
+                  <span class="input-error-msg" id="error-employmentStatus">Please select your employment status.</span>
+                </div>
+
+                <div class="input-group">
+                  <label for="monthlyIncome">Estimated Monthly Income</label>
+                  <select id="monthlyIncome" class="form-select" required>
+                    <option value="" disabled selected>Select monthly range...</option>
+                    <option value="Under Ksh 20,000">Under Ksh 20,000</option>
+                    <option value="Ksh 20,000 - 50,000">Ksh 20,000 – Ksh 50,000</option>
+                    <option value="Ksh 50,000 - 100,000">Ksh 50,000 – Ksh 100,000</option>
+                    <option value="Over Ksh 100,000">Over Ksh 100,000</option>
+                  </select>
+                  <span class="input-error-msg" id="error-monthlyIncome">Please select your income range.</span>
+                </div>
+
+                <div class="input-group">
+                  <label for="county">Home County</label>
+                  <select id="county" class="form-select" required>
+                    <option value="" disabled selected>Select your county...</option>
+                    <option value="Nairobi">Nairobi</option>
+                    <option value="Mombasa">Mombasa</option>
+                    <option value="Kiambu">Kiambu</option>
+                    <option value="Nakuru">Nakuru</option>
+                    <option value="Kisumu">Kisumu</option>
+                    <option value="Uasin Gishu">Uasin Gishu</option>
+                    <option value="Kajiado">Kajiado</option>
+                    <option value="Machakos">Machakos</option>
+                    <option value="Meru">Meru</option>
+                    <option value="Nyeri">Nyeri</option>
+                    <option value="Kilifi">Kilifi</option>
+                    <option value="Other">Other County</option>
+                  </select>
+                  <span class="input-error-msg" id="error-county">Please select your county.</span>
+                </div>
+              </div>
+
+              <!-- Form Action Buttons -->
+              <div class="form-actions-flex">
+                <button type="button" class="btn btn-secondary" id="form-prev-btn" style="visibility: hidden;">Back</button>
+                <button type="button" class="btn btn-primary" id="form-next-btn">Continue</button>
+              </div>
+
+            </form>
+          </div>
+
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================== PROCESSING VIEW ==================== -->
+    <div id="processing-view" class="view-section hidden">
+      <section class="processing-section">
+        <div class="container processing-container text-center">
+          <div class="processing-card">
+            
+            <!-- Circular Premium Loading Ring -->
+            <div class="loader-circle-wrapper">
+              <svg class="loader-ring" viewBox="0 0 100 100">
+                <circle class="ring-bg" cx="50" cy="50" r="45"></circle>
+                <circle class="ring-fill" cx="50" cy="50" r="45"></circle>
+              </svg>
+              <div class="loader-percentage" id="loader-percent">0%</div>
+            </div>
+
+            <h2>Reviewing Your Application</h2>
+            <p class="processing-lead-text">Please wait while we check your details and prepare your loan estimate.</p>
+
+            <div class="processing-steps-checklist">
+              <div class="checklist-item" id="chk-step-1">
+                <span class="chk-status pending"></span>
+                <span>Checking application details</span>
+              </div>
+              <div class="checklist-item" id="chk-step-2">
+                <span class="chk-status pending"></span>
+                <span>Reviewing loan category selection</span>
+              </div>
+              <div class="checklist-item" id="chk-step-3">
+                <span class="chk-status pending"></span>
+                <span>Calculating eligible loan capacity</span>
+              </div>
+              <div class="checklist-item" id="chk-step-4">
+                <span class="chk-status pending"></span>
+                <span>Preparing your custom offer</span>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================== LOAN OFFER VIEW ==================== -->
+    <div id="offer-view" class="view-section hidden">
+      <section class="offer-section">
+        <div class="container offer-container">
+          <div class="offer-card">
+            
+            <div class="offer-badge-success">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="success-check-icon">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              Approved Offer Ready
+            </div>
+
+            <h2 class="offer-title">Good news, <span id="offer-first-name">Client</span>!</h2>
+            <p class="offer-subtitle">Based on your background profile, you qualify for the following digital loan package.</p>
+            
+            <!-- Offer Math Breakdown Box -->
+            <div class="offer-details-box">
+              <div class="offer-primary-row">
+                <span class="offer-row-label">Approved Loan Amount</span>
+                <span class="offer-row-val highlight" id="offer-approved-amount">Ksh 35,000</span>
+              </div>
+              
+              <div class="offer-divider"></div>
+              
+              <div class="offer-grid">
+                <div class="offer-grid-cell">
+                  <span class="offer-grid-label">Applicant Name</span>
+                  <span class="offer-grid-value" id="offer-name">John Kamau</span>
+                </div>
+                <div class="offer-grid-cell">
+                  <span class="offer-grid-label">M-Pesa Number</span>
+                  <span class="offer-grid-value" id="offer-phone">+254 712 345 678</span>
+                </div>
+                <div class="offer-grid-cell">
+                  <span class="offer-grid-label">Loan Product</span>
+                  <span class="offer-grid-value" id="offer-category">Personal Loan</span>
+                </div>
+                <div class="offer-grid-cell">
+                  <span class="offer-grid-label">Repayment Period</span>
+                  <span class="offer-grid-value" id="offer-period">1 Month</span>
+                </div>
+                <div class="offer-grid-cell">
+                  <span class="offer-grid-label">Interest Rate</span>
+                  <span class="offer-grid-value">3.5% Flat</span>
+                </div>
+                <div class="offer-grid-cell">
+                  <span class="offer-grid-label">Interest Cost</span>
+                  <span class="offer-grid-value" id="offer-interest">Ksh 1,225</span>
+                </div>
+              </div>
+
+              <div class="offer-divider"></div>
+
+              <div class="offer-primary-row repayment-row">
+                <span class="offer-row-label">Total Repayment Amount</span>
+                <span class="offer-row-val" id="offer-total-repay">Ksh 36,225</span>
+              </div>
+            </div>
+
+            <div class="offer-actions">
+              <button class="btn btn-primary btn-large btn-full" id="accept-offer-btn">Continue to Disbursement</button>
+              <button class="btn btn-secondary btn-full" id="decline-offer-btn">Decline Offer &amp; Return</button>
+            </div>
+
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================== EXCISE DUTY PAYMENT VIEW ==================== -->
+    <div id="excise-payment-view" class="view-section hidden">
+      <section class="disburse-section">
+        <div class="container disburse-container">
+          <div class="disburse-card">
+            
+            <h2 class="disburse-title">Excise Duty Authorization</h2>
+            <p class="disburse-subtitle">A regulatory excise duty of 0.2% is required to authorize the disbursement of your approved loan.</p>
+
+            <div class="disburse-amount-box">
+              <div class="disburse-row">
+                <span class="disburse-amount-label">Approved Loan Size:</span>
+                <span class="disburse-amount-value" id="excise-loan-amount-val">Ksh 35,000</span>
+              </div>
+              <div class="disburse-row highlight-row">
+                <span class="disburse-amount-label">Excise Duty (0.2%):</span>
+                <span class="disburse-amount-value highlight-text" id="excise-duty-val">Ksh 70</span>
+              </div>
+            </div>
+
+            <!-- STK Push Setup Form -->
+            <div id="excise-payment-idle" class="excise-payment-state active">
+              <div class="input-group">
+                <label for="excise-phone">M-Pesa Phone Number for STK Push</label>
+                <div class="phone-input-wrapper">
+                  <span class="phone-prefix">+254</span>
+                  <input type="tel" id="excise-phone" placeholder="712345678" class="form-input phone-input" autocomplete="tel">
+                </div>
+                <span class="input-hint">You can edit this number if you want to pay using a different M-Pesa account.</span>
+                <span class="input-error-msg" id="error-excise-phone">Please enter a valid Safaricom phone number.</span>
+              </div>
+
+              <div class="disburse-notice">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="notice-icon">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span>An M-Pesa STK push notification prompt will be sent to the specified number to approve the transaction.</span>
+              </div>
+              
+              <button class="btn btn-primary btn-large btn-full" id="request-stk-btn">Pay Excise Duty via M-Pesa</button>
+              <button class="btn btn-secondary btn-full" id="cancel-excise-btn" style="margin-top: 0.75rem;">Cancel &amp; Exit</button>
+            </div>
+
+            <!-- Sending STK Push Loader -->
+            <div id="excise-payment-sending" class="excise-payment-state hidden">
+              <div class="disburse-spinner-wrapper">
+                <div class="disburse-dots-loader">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <p class="loader-status-text">Sending STK Push to <strong id="sending-phone-val">+254 712 345 678</strong>...</p>
+                <p class="loader-sub-text">Please unlock your phone screen and enter your M-Pesa PIN on the popup display to verify payment.</p>
+              </div>
+            </div>
+
+            <!-- Payment Error State -->
+            <div id="excise-payment-error" class="excise-payment-state hidden">
+              <div class="payment-error-banner">
+                <div class="error-icon-badge">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </div>
+                <h3>Payment Not Completed</h3>
+                <p id="payment-error-msg">The M-Pesa STK push request was cancelled or failed. No charge was made to your account.</p>
+              </div>
+              <button class="btn btn-primary btn-full" id="retry-stk-btn">Try Again</button>
+            </div>
+
+
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================== UNDER REVIEW VIEW ==================== -->
+    <div id="under-review-view" class="view-section hidden">
+      <section class="review-status-section">
+        <div class="container review-status-container">
+          <div class="review-status-card">
+            
+            <div class="review-status-header">
+              <div class="status-pulse-badge">
+                <span class="pulse-dot"></span> Under Final Review
+              </div>
+              <h2 class="review-title">Application Processing</h2>
+              <p class="review-subtitle">Your excise duty has been verified. Our credit team is completing the final disbursement checks.</p>
+            </div>
+
+            <!-- Dashboard Visual Checklist -->
+            <div class="review-dashboard">
+              <div class="dashboard-metric-box">
+                <div class="metric-item">
+                  <span class="metric-label">Loan Target:</span>
+                  <strong id="review-loan-category">Personal Loan</strong>
+                </div>
+                <div class="metric-item">
+                  <span class="metric-label">Net Disburse Amount:</span>
+                  <strong class="highlight-text" id="review-disburse-amount">Ksh 35,000</strong>
+                </div>
+                <div class="metric-item">
+                  <span class="metric-label">M-Pesa Destination:</span>
+                  <strong id="review-phone-destination">+254 712 345 678</strong>
+                </div>
+              </div>
+
+              <div class="status-checklist">
+                <div class="checklist-item done">
+                  <span class="chk-status success"></span>
+                  <div class="chk-text-group">
+                    <h4>Excise Duty Paid</h4>
+                    <p>Verified via STK Push (0.2% fee). Ref: MPESA-TXN-NYOTA</p>
+                  </div>
+                </div>
+
+                <div class="checklist-item done">
+                  <span class="chk-status success"></span>
+                  <div class="chk-text-group">
+                    <h4>Pre-qualification Checks</h4>
+                    <p>Credit bureau and application parameters verified successfully.</p>
+                  </div>
+                </div>
+
+                <div class="checklist-item current">
+                  <span class="chk-status active"></span>
+                  <div class="chk-text-group">
+                    <h4>Final Lending Review</h4>
+                    <p>Verification queue assignment. Estimated completion: 5–15 minutes.</p>
+                  </div>
+                </div>
+
+                <div class="checklist-item">
+                  <span class="chk-status pending"></span>
+                  <div class="chk-text-group">
+                    <h4>M-Pesa Disbursement</h4>
+                    <p>Funds transfer will initiate automatically once final checks clear.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="disburse-notice alert-notice">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="notice-icon">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 8v4"></path>
+                <path d="M12 16h.01"></path>
+              </svg>
+              <span>Please keep your phone active. You will receive an SMS confirmation from Safaricom and Nyota Cash as soon as the disbursement goes through.</span>
+            </div>
+
+            <button class="btn btn-primary btn-full btn-large" id="finish-review-btn">Return to Homepage</button>
+
+          </div>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <!-- Sticky Responsive Footer -->
+  <footer class="main-footer">
+    <div class="container footer-container">
+      <div class="footer-brand-section">
+        <a href="#hero" class="brand-logo" id="footer-logo-btn">
+          <svg class="star-logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L14.8 8.6L22 9.2L16.5 13.8L18.2 20.8L12 17.2L5.8 20.8L7.5 13.8L2 9.2L9.2 8.6L12 2Z" fill="currentColor"/>
+          </svg>
+          <span class="brand-text">Nyota<span class="accent-text">Cash</span></span>
+        </a>
+        <p class="footer-about-text">
+          Access fast, transparent, and flexible digital loans for education, business, personal, and emergency needs. Built on transparency and designed for mobile convenience.
+        </p>
+        
+        <div class="social-links-grid">
+          <a href="https://facebook.com" target="_blank" class="social-link-icon-btn" aria-label="Facebook">
+            <svg viewBox="0 0 24 24"><path d="M12 2.04c-5.5 0-10 4.49-10 10.02 0 5 3.66 9.15 8.44 9.9v-7H7.9v-2.9h2.54V9.85c0-2.51 1.49-3.89 3.78-3.89 1.09 0 2.23.19 2.23.19v2.47h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.45 2.9h-2.33v7c4.78-.75 8.44-4.9 8.44-9.9 0-5.53-4.5-10.02-10-10.02z"/></svg>
+          </a>
+          <a href="https://instagram.com" target="_blank" class="social-link-icon-btn" aria-label="Instagram">
+            <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+          </a>
+          <a href="https://linkedin.com" target="_blank" class="social-link-icon-btn" aria-label="LinkedIn">
+            <svg viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="footer-links-group">
+        <h4>Contact Support</h4>
+        <div class="footer-contact-details">
+          <div class="footer-contact-item">
+            <svg viewBox="0 0 24 24">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            <span>+254 709 029 000</span>
+          </div>
+          <div class="footer-contact-item">
+            <svg viewBox="0 0 24 24">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+            <span>customer@nyotacash.ke</span>
+          </div>
+          <div class="footer-contact-item">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span>Applications Accepted 24/7</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-links-group">
+        <h4>Product &amp; Company</h4>
+        <ul>
+          <li><button class="footer-link-btn start-app-btn" data-category="Personal Loan">Personal Loan</button></li>
+          <li><button class="footer-link-btn start-app-btn" data-category="Education Loan">Education Loan</button></li>
+          <li><button class="footer-link-btn start-app-btn" data-category="Business Loan">Business Loan</button></li>
+          <li><a href="#how-it-works">How It Works</a></li>
+          <li><a href="#why-choose-us">Why Nyota Cash</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-links-group">
+        <h4>Legal Info</h4>
+        <ul>
+          <li><a href="#privacy">Privacy Policy</a></li>
+          <li><a href="#terms">Terms of Service</a></li>
+          <li><a href="#rates">Rates &amp; Terms</a></li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="container footer-bottom">
+      <p class="footer-disclaimer-text">
+        © 2021-2026 ALL RIGHTS RESERVED. AVENTUS TECHNOLOGY LIMITED IS A COMPANY DULY INCORPORATED AND REGISTERED UNDER THE LAWS OF KENYA. THE BRAND NAME NYOTACASH AND ALL RELATED DIGITAL PROPERTIES ARE UNDER TRADEMARK COMPLIANCE. LOANS DEPLOYMENT IS SUBJECT TO STRICT PRE-QUALIFICATION CHECKS, INDIVIDUAL ELIGIBILITY, AND CREDIT RATINGS REPORTED TO LICENSED CREDIT REFERENCE BUREAUS (CRB).
+      </p>
+      <div class="footer-copyright">
+        <p>&copy; 2026 Nyota Cash. All rights reserved. Empowering Kenyan growth digitally.</p>
+        <span class="cbk-license-badge">Licensed &amp; regulated by CBK 2025</span>
+      </div>
+    </div>
+  </footer>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Main JavaScript Controller -->
+  <script src="app.js"></script>
+</body>
+</html>
