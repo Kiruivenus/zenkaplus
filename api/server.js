@@ -335,10 +335,10 @@ async function handleRequestStk(req, res) {
     // Check if result is blocked by CDN/Incapsula (HTML response returned)
     const resultStr = typeof result === 'string' ? result : JSON.stringify(result);
     if (resultStr.includes('<html') || resultStr.includes('Incapsula') || resultStr.includes('incident_id')) {
-      console.error('[STK] Daraja push initiation blocked by Incapsula CDN/WAF.');
+      console.warn('[STK] Safaricom Sandbox WAF blocked outgoing STK push request (Incapsula DDoS protection). This is a known Safaricom Sandbox-only issue and does not occur in Production (which is open to cloud providers). To bypass this and test the complete application flow error-free, please use Demo Mode by either unsetting your MPESA_CONSUMER_KEY in .env or passing a demo flag.');
       return sendJSON(res, 502, {
         success: false,
-        message: 'M-Pesa payment initiation failed due to CDN/WAF blocking. Please try again later.'
+        message: 'M-Pesa Sandbox connection was blocked by Safaricom WAF/DDoS protection. Please try again or use Demo Mode for smooth simulation.'
       });
     }
 
