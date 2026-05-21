@@ -948,8 +948,17 @@ document.addEventListener('DOMContentLoaded', () => {
   function startPaymentPolling(checkoutRequestId, formattedPhone) {
     if (pollingIntervalId) clearInterval(pollingIntervalId);
 
+    const startTime = Date.now();
     pollingIntervalId = setInterval(async () => {
       try {
+        // Timeout after 65 seconds
+        if (Date.now() - startTime > 65000) {
+          clearInterval(pollingIntervalId);
+          pollingIntervalId = null;
+          showExciseErrorState('failed', 'The payment verification process timed out. Please verify if the M-Pesa prompt appeared on your phone and try again.');
+          return;
+        }
+
         const response = await fetch(`/api/check-payment-status?checkoutRequestId=${checkoutRequestId}`);
         if (!response.ok) throw new Error('Status check request failed');
         

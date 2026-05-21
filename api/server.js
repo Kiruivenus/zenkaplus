@@ -151,11 +151,18 @@ async function getDarajaToken() {
     method  : 'GET',
     headers : {
       'Authorization': `Basic ${credentials}`,
-      'Content-Type' : 'application/json'
+      'Content-Type' : 'application/json',
+      'User-Agent'   : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+      'Accept'       : 'application/json',
+      'Connection'   : 'keep-alive'
     }
   });
   if (!result.data.access_token) {
-    throw new Error(`Daraja OAuth failed: ${JSON.stringify(result.data)}`);
+    const rawDataStr = typeof result.data === 'string' ? result.data : JSON.stringify(result.data);
+    if (rawDataStr.includes('<html') || rawDataStr.includes('Incapsula') || rawDataStr.includes('incident_id')) {
+      throw new Error('Daraja API blocked by Incapsula CDN/WAF DDoS protection. Please check server IP reputation.');
+    }
+    throw new Error(`Daraja OAuth failed: ${rawDataStr}`);
   }
   return result.data.access_token;
 }
@@ -200,7 +207,10 @@ async function initiateStkPush(token, phoneRaw, amountKsh) {
     headers : {
       'Authorization': `Bearer ${token}`,
       'Content-Type' : 'application/json',
-      'Content-Length': Buffer.byteLength(payload)
+      'Content-Length': Buffer.byteLength(payload),
+      'User-Agent'   : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+      'Accept'       : 'application/json',
+      'Connection'   : 'keep-alive'
     }
   }, payload);
 
@@ -264,12 +274,23 @@ async function handleRequestStk(req, res) {
     const token  = await getDarajaToken();
     const result = await initiateStkPush(token, phone, amount);
 
+    // Check if result is blocked by CDN/Incapsula (HTML response returned)
+    const resultStr = typeof result === 'string' ? result : JSON.stringify(result);
+    if (resultStr.includes('<html') || resultStr.includes('Incapsula') || resultStr.includes('incident_id')) {
+      console.error('[STK] Daraja push initiation blocked by Incapsula CDN/WAF.');
+      return sendJSON(res, 502, {
+        success: false,
+        message: 'M-Pesa payment initiation failed due to CDN/WAF blocking. Please try again later.'
+      });
+    }
+
     // Safaricom returns ResponseCode "0" on successful STK initiation
     if (result.ResponseCode !== '0') {
+      const displayMsg = typeof result === 'object' ? (result.CustomerMessage || result.errorMessage) : null;
       console.error('[STK] Daraja push initiation rejected by Safaricom:', result);
       return sendJSON(res, 502, { 
         success: false, 
-        message: result.CustomerMessage || result.errorMessage || `Safaricom rejected the request (ResponseCode ${result.ResponseCode}).` 
+        message: displayMsg || `Safaricom rejected the request (ResponseCode ${result.ResponseCode}).` 
       });
     }
 
@@ -364,7 +385,10 @@ async function queryDarajaStkStatus(checkoutRequestId) {
       headers : {
         'Authorization': `Bearer ${token}`,
         'Content-Type' : 'application/json',
-        'Content-Length': Buffer.byteLength(payload)
+        'Content-Length': Buffer.byteLength(payload),
+        'User-Agent'   : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept'       : 'application/json',
+        'Connection'   : 'keep-alive'
       }
     }, payload);
 
