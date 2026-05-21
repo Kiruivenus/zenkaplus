@@ -215,12 +215,13 @@ async function initiateStkPush(token, phoneRaw, amountKsh) {
 async function handleRequestStk(req, res) {
   const body = await readBody(req);
   const { phone, amount } = body;
-
   if (!phone || !amount) {
     return sendJSON(res, 400, { success: false, message: 'Missing phone or amount.' });
   }
 
-  if (!MPESA_CONSUMER_KEY || !MPESA_CONSUMER_SECRET) {
+  const isDemoMode = !MPESA_CONSUMER_KEY || !MPESA_CONSUMER_SECRET || body.demo === true || body.demo === 'true';
+
+  if (isDemoMode) {
     // Demo Mode: Mock STK initiation and schedule a mock callback after 8 seconds
     const mockCheckoutRequestId = `ws_CO_${Date.now()}`;
     setTransaction(mockCheckoutRequestId, {
@@ -371,12 +372,17 @@ async function queryDarajaStkStatus(checkoutRequestId) {
       const { ResponseCode, ResultCode, ResultDesc } = result.data;
       if (ResponseCode === '0') {
         const resultCodeNum = parseInt(ResultCode, 10);
+        const descLower = (ResultDesc || '').toLowerCase();
+        
         let status = 'failed';
         if (resultCodeNum === 0) {
           status = 'success';
         } else if (resultCodeNum === 1032) {
           status = 'cancelled';
+        } else if (resultCodeNum === 4999 || descLower.includes('processing') || descLower.includes('progress') || descLower.includes('pending')) {
+          status = 'pending';
         }
+        
         return {
           status: status,
           resultCode: resultCodeNum,
