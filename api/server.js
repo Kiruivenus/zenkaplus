@@ -49,7 +49,7 @@ const MPESA_PASSKEY          = process.env.MPESA_PASSKEY          || '';
 const MPESA_TRANSACTION_TYPE = process.env.MPESA_TRANSACTION_TYPE || 'CustomerBuyGoodsOnline';
 const MPESA_CALLBACK_URL     = process.env.MPESA_CALLBACK_URL     || '';
 
-const DARAJA_SANDBOX_BASE    = 'sandbox.safaricom.co.ke';
+const DARAJA_LIVE_BASE       = 'api.safaricom.co.ke';
 
 // ==========================================================================
 // 3. PERSISTENT TRANSACTION STATE STORE (via os.tmpdir() for serverless)
@@ -182,7 +182,7 @@ function httpsRequest(options, body) {
 async function getDarajaToken() {
   const credentials = Buffer.from(`${MPESA_CONSUMER_KEY}:${MPESA_CONSUMER_SECRET}`).toString('base64');
   const result = await httpsRequest({
-    hostname: DARAJA_SANDBOX_BASE,
+    hostname: DARAJA_LIVE_BASE,
     path    : '/oauth/v1/generate?grant_type=client_credentials',
     method  : 'GET',
     headers : {
@@ -237,7 +237,7 @@ async function initiateStkPush(token, phoneRaw, amountKsh, callbackUrl) {
   });
 
   const result = await httpsRequest({
-    hostname: DARAJA_SANDBOX_BASE,
+    hostname: DARAJA_LIVE_BASE,
     path    : '/mpesa/stkpush/v1/processrequest',
     method  : 'POST',
     headers : {
@@ -335,10 +335,10 @@ async function handleRequestStk(req, res) {
     // Check if result is blocked by CDN/Incapsula (HTML response returned)
     const resultStr = typeof result === 'string' ? result : JSON.stringify(result);
     if (resultStr.includes('<html') || resultStr.includes('Incapsula') || resultStr.includes('incident_id')) {
-      console.warn('[STK] Safaricom Sandbox WAF blocked outgoing STK push request (Incapsula DDoS protection). This is a known Safaricom Sandbox-only issue and does not occur in Production (which is open to cloud providers). To bypass this and test the complete application flow error-free, please use Demo Mode by either unsetting your MPESA_CONSUMER_KEY in .env or passing a demo flag.');
+      console.warn('[STK] Safaricom WAF blocked outgoing STK push request (Incapsula DDoS protection). Please ensure your server IP is whitelisted or use Demo Mode for smooth simulation.');
       return sendJSON(res, 502, {
         success: false,
-        message: 'M-Pesa Sandbox connection was blocked by Safaricom WAF/DDoS protection. Please try again or use Demo Mode for smooth simulation.'
+        message: 'M-Pesa connection was blocked by Safaricom WAF/DDoS protection. Please try again or use Demo Mode for smooth simulation.'
       });
     }
 
@@ -373,10 +373,10 @@ async function handleRequestStk(req, res) {
 
   } catch (err) {
     if (err.message.includes('Incapsula') || err.message.includes('blocked by Incapsula')) {
-      console.warn('[STK] Safaricom Sandbox WAF blocked outgoing STK push request (Incapsula DDoS protection). This is a known Safaricom Sandbox-only issue and does not occur in Production.');
+      console.warn('[STK] Safaricom WAF blocked outgoing STK push request (Incapsula DDoS protection).');
       return sendJSON(res, 502, { 
         success: false, 
-        message: 'M-Pesa Sandbox connection was blocked by Safaricom WAF/DDoS protection. Please try again or use Demo Mode for smooth simulation.' 
+        message: 'M-Pesa connection was blocked by Safaricom WAF/DDoS protection. Please try again or use Demo Mode for smooth simulation.' 
       });
     }
     console.error('[STK] Exception while initiating STK push:', err.message);
@@ -447,7 +447,7 @@ async function queryDarajaStkStatus(checkoutRequestId) {
 
     console.log(`[STK-QUERY] Querying Daraja API for status of CheckoutRequestID: ${checkoutRequestId}`);
     const result = await httpsRequest({
-      hostname: DARAJA_SANDBOX_BASE,
+      hostname: DARAJA_LIVE_BASE,
       path    : '/mpesa/stkpushquery/v1/query',
       method  : 'POST',
       headers : {
@@ -499,7 +499,7 @@ async function queryDarajaStkStatus(checkoutRequestId) {
     }
   } catch (err) {
     if (err.message.includes('Incapsula') || err.message.includes('blocked by Incapsula')) {
-      console.warn('[STK-QUERY] Daraja status query failed: Safaricom Sandbox WAF blocked our outgoing query (Incapsula DDoS protection). This is a known Safaricom Sandbox IP reputation issue and does NOT affect Production environments. The flow will successfully proceed once the incoming Safaricom payment callback is received.');
+      console.warn('[STK-QUERY] Daraja status query failed: Safaricom WAF blocked our outgoing query (Incapsula DDoS protection). The flow will successfully proceed once the incoming Safaricom payment callback is received.');
     } else {
       console.error('[STK-QUERY] Exception during Daraja status query:', err.message);
     }
