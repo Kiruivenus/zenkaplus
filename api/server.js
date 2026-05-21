@@ -439,32 +439,41 @@ async function handleCheckPaymentStatus(req, res) {
 
   let entry = getTransaction(checkoutRequestId);
   if (!entry) {
-    // If not found in store but M-Pesa is configured, try querying Safaricom directly
+    // If not found in store but M-Pesa is configured, create a placeholder transaction and attempt background query
     if (MPESA_CONSUMER_KEY && MPESA_CONSUMER_SECRET) {
-      console.log(`[STATUS] CheckoutRequestID ${checkoutRequestId} not found in store, attempting background Daraja query.`);
-      const queried = await queryDarajaStkStatus(checkoutRequestId);
-      if (queried) {
-        entry = {
-          status: queried.status,
-          resultCode: queried.resultCode,
-          resultDesc: queried.resultDesc,
-          amount: 0,
-          phone: '',
-          createdAt: Date.now()
-        };
-        setTransaction(checkoutRequestId, entry);
-      }
+      console.log(`[STATUS] CheckoutRequestID ${checkoutRequestId} not found in store, creating pending entry.`);
+      entry = {
+        status: 'pending',
+        resultCode: null,
+        resultDesc: null,
+        amount: 0,
+        phone: '',
+        createdAt: Date.now(),
+        lastQueryTime: 0
+      };
+      setTransaction(checkoutRequestId, entry);
     }
-  } else if (entry.status === 'pending') {
+  }
+
+  if (entry && entry.status === 'pending') {
     // If pending, query Safaricom to bypass Vercel statelessness callback issues
     if (MPESA_CONSUMER_KEY && MPESA_CONSUMER_SECRET) {
-      const queried = await queryDarajaStkStatus(checkoutRequestId);
-      if (queried && queried.status !== 'pending') {
-        entry.status = queried.status;
-        entry.resultCode = queried.resultCode;
-        entry.resultDesc = queried.resultDesc;
-        setTransaction(checkoutRequestId, entry);
-        console.log(`[STATUS] Transaction ${checkoutRequestId} status updated via background Daraja query: ${entry.status}`);
+      const now = Date.now();
+      const lastQuery = entry.lastQueryTime || 0;
+      if (now - lastQuery >= 10000) { // Throttling: only query Safaricom once every 10 seconds
+        entry.lastQueryTime = now;
+        setTransaction(checkoutRequestId, entry); // Save lastQueryTime first to prevent parallel requests
+
+        const queried = await queryDarajaStkStatus(checkoutRequestId);
+        if (queried) {
+          if (queried.status !== 'pending') {
+            entry.status = queried.status;
+            entry.resultCode = queried.resultCode;
+            entry.resultDesc = queried.resultDesc;
+            console.log(`[STATUS] Transaction ${checkoutRequestId} status updated via background Daraja query: ${entry.status}`);
+          }
+          setTransaction(checkoutRequestId, entry);
+        }
       }
     }
   }
