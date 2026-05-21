@@ -908,59 +908,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showView('excisePayment');
   }
 
-  let clientSimulatedStatus = null;
-  let clientSimulatedDesc = null;
 
-  // Bind sandbox simulation click handlers to control state changes directly
-  function bindSimulatorButtons(checkoutRequestId, formattedPhone) {
-    const payBtn = document.getElementById('sim-pay-btn');
-    const cancelBtn = document.getElementById('sim-cancel-btn');
-    const pinBtn = document.getElementById('sim-pin-btn');
-    const fundsBtn = document.getElementById('sim-funds-btn');
-
-    if (!payBtn) return;
-
-    // Reset client simulation state
-    clientSimulatedStatus = null;
-    clientSimulatedDesc = null;
-
-    const triggerSimulation = async (status, desc) => {
-      clientSimulatedStatus = status;
-      clientSimulatedDesc = desc;
-      
-      console.log(`[SIMULATOR] Triggering simulated payment status: ${status} - ${desc}`);
-      
-      try {
-        // Send state to backend mock-callback so server transaction state is synced
-        await fetch('/api/mock-callback', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ checkoutRequestId, status })
-        });
-      } catch (err) {
-        console.warn('[SIMULATOR] Failed to sync simulation with backend:', err.message);
-      }
-    };
-
-    // Recreate event listeners by cloning elements (prevents duplicate bindings)
-    payBtn.replaceWith(payBtn.cloneNode(true));
-    cancelBtn.replaceWith(cancelBtn.cloneNode(true));
-    pinBtn.replaceWith(pinBtn.cloneNode(true));
-    fundsBtn.replaceWith(fundsBtn.cloneNode(true));
-
-    document.getElementById('sim-pay-btn').addEventListener('click', () => {
-      triggerSimulation('success', '[Mock] The service request is processed successfully.');
-    });
-    document.getElementById('sim-cancel-btn').addEventListener('click', () => {
-      triggerSimulation('cancelled', 'The payment prompt was cancelled by the user. No funds were deducted.');
-    });
-    document.getElementById('sim-pin-btn').addEventListener('click', () => {
-      triggerSimulation('failed', 'The wrong PIN was entered. Please try again.');
-    });
-    document.getElementById('sim-funds-btn').addEventListener('click', () => {
-      triggerSimulation('failed', 'Insufficient funds in the M-Pesa account. Please deposit money and try again.');
-    });
-  }
 
   // Display dynamic payment error UI depending on cancel vs failed statuses
   function showExciseErrorState(status, message) {
@@ -1000,31 +948,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function startPaymentPolling(checkoutRequestId, formattedPhone) {
     if (pollingIntervalId) clearInterval(pollingIntervalId);
 
-    // Bind sandbox simulation click handlers
-    bindSimulatorButtons(checkoutRequestId, formattedPhone);
-
     pollingIntervalId = setInterval(async () => {
       try {
-        // Intercept polling if simulator button was clicked (instant user feedback)
-        if (clientSimulatedStatus) {
-          const status = clientSimulatedStatus;
-          const desc = clientSimulatedDesc;
-          
-          clearInterval(pollingIntervalId);
-          pollingIntervalId = null;
-          clientSimulatedStatus = null;
-          clientSimulatedDesc = null;
-
-          if (status === 'success') {
-            renderUnderReviewPage(formattedPhone);
-          } else if (status === 'cancelled') {
-            showExciseErrorState('cancelled', desc);
-          } else {
-            showExciseErrorState('failed', desc);
-          }
-          return;
-        }
-
         const response = await fetch(`/api/check-payment-status?checkoutRequestId=${checkoutRequestId}`);
         if (!response.ok) throw new Error('Status check request failed');
         
@@ -1091,9 +1016,8 @@ document.addEventListener('DOMContentLoaded', () => {
       startPaymentPolling(currentCheckoutRequestId, formattedTargetPhone);
 
     } catch (err) {
-      console.warn('[STK API Fallback]', err.message);
+      console.error('[STK Push Error]', err.message);
       
-      // Notify the user via a sleek SweetAlert2 toast that we are starting sandbox simulation
       const Toast = Swal.mixin({
         toast: true,
         position: 'top-end',
@@ -1107,16 +1031,11 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       
       Toast.fire({
-        icon: 'info',
-        title: 'STK API unavailable. Launching M-Pesa Simulator controls.'
+        icon: 'error',
+        title: 'Failed to initiate M-Pesa payment: ' + err.message
       });
 
-      // Generate a client-side mock Checkout Request ID
-      const mockCheckoutId = `mock_stk_${Date.now()}`;
-      currentCheckoutRequestId = mockCheckoutId;
-      
-      // Start the simulated polling flow
-      startPaymentPolling(mockCheckoutId, formattedTargetPhone);
+      setExciseState('idle');
     }
   });
 

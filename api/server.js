@@ -221,7 +221,42 @@ async function handleRequestStk(req, res) {
   }
 
   if (!MPESA_CONSUMER_KEY || !MPESA_CONSUMER_SECRET) {
-    return sendJSON(res, 500, { success: false, message: 'Missing M-Pesa API Consumer Key or Secret in .env configuration.' });
+    // Demo Mode: Mock STK initiation and schedule a mock callback after 8 seconds
+    const mockCheckoutRequestId = `ws_CO_${Date.now()}`;
+    setTransaction(mockCheckoutRequestId, {
+      status      : 'pending',
+      resultCode  : null,
+      resultDesc  : null,
+      amount      : amount,
+      phone       : phone,
+      createdAt   : Date.now()
+    });
+
+    console.log(`[STK-DEMO] Demo mode: Initiated mock STK. CheckoutRequestID: ${mockCheckoutRequestId}`);
+    
+    // Schedule a mock callback update after 8 seconds (70% success, 30% user cancel)
+    setTimeout(() => {
+      const isSuccess = Math.random() > 0.3;
+      const resultCode = isSuccess ? 0 : 1032;
+      const resultDesc = isSuccess 
+        ? '[Mock] The service request is processed successfully.' 
+        : '[Mock] Request cancelled by user.';
+      
+      const entry = getTransaction(mockCheckoutRequestId);
+      if (entry) {
+        entry.resultCode = resultCode;
+        entry.resultDesc = resultDesc;
+        entry.status = resultCode === 0 ? 'success' : (resultCode === 1032 ? 'cancelled' : 'failed');
+        setTransaction(mockCheckoutRequestId, entry);
+        console.log(`[STK-DEMO-CALLBACK] Auto-callback fired for ${mockCheckoutRequestId}: ${entry.status}`);
+      }
+    }, 8000);
+
+    return sendJSON(res, 200, {
+      success          : true,
+      checkoutRequestId: mockCheckoutRequestId,
+      customerMessage  : 'Success. Request accepted for processing (Demo Mode).'
+    });
   }
 
   try {
