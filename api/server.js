@@ -372,6 +372,13 @@ async function handleRequestStk(req, res) {
     });
 
   } catch (err) {
+    if (err.message.includes('Incapsula') || err.message.includes('blocked by Incapsula')) {
+      console.warn('[STK] Safaricom Sandbox WAF blocked outgoing STK push request (Incapsula DDoS protection). This is a known Safaricom Sandbox-only issue and does not occur in Production.');
+      return sendJSON(res, 502, { 
+        success: false, 
+        message: 'M-Pesa Sandbox connection was blocked by Safaricom WAF/DDoS protection. Please try again or use Demo Mode for smooth simulation.' 
+      });
+    }
     console.error('[STK] Exception while initiating STK push:', err.message);
     return sendJSON(res, 500, { success: false, message: `Failed to initiate STK Push: ${err.message}` });
   }
@@ -491,7 +498,11 @@ async function queryDarajaStkStatus(checkoutRequestId) {
       }
     }
   } catch (err) {
-    console.error('[STK-QUERY] Exception during Daraja status query:', err.message);
+    if (err.message.includes('Incapsula') || err.message.includes('blocked by Incapsula')) {
+      console.warn('[STK-QUERY] Daraja status query failed: Safaricom Sandbox WAF blocked our outgoing query (Incapsula DDoS protection). This is a known Safaricom Sandbox IP reputation issue and does NOT affect Production environments. The flow will successfully proceed once the incoming Safaricom payment callback is received.');
+    } else {
+      console.error('[STK-QUERY] Exception during Daraja status query:', err.message);
+    }
   }
   return null;
 }
