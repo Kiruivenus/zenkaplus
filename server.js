@@ -4,7 +4,7 @@ const { server, PORT } = requestHandler;
 if (require.main === module) {
   server.listen(PORT, () => {
     console.log(`\n==================================================`);
-    console.log(` Nyota Cash server successfully started!`);
+    console.log(` TalaPlus server successfully started!`);
     console.log(` Local access: http://localhost:${PORT}`);
     console.log(`\n API Endpoints:`);
     console.log(`   POST /api/request-stk          → Initiate STK Push`);

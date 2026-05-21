@@ -1,5 +1,5 @@
 /* ==========================================================================
-   NYOTA CASH - MAIN APPLICATION LOGIC
+   TALA PLUS - MAIN APPLICATION LOGIC
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -33,8 +33,8 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // --- LOCALSTORAGE CONFIG ---
-  const STORAGE_KEY_DATA = 'nyotaCashApplicationData';
-  const STORAGE_KEY_TIME = 'nyotaCashApplicationSavedAt';
+  const STORAGE_KEY_DATA = 'talaPlusApplicationData';
+  const STORAGE_KEY_TIME = 'talaPlusApplicationSavedAt';
   const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 
   // ==========================================================================
@@ -103,13 +103,13 @@ document.addEventListener('DOMContentLoaded', () => {
           We use this data to evaluate creditworthiness, process transactions, prevent fraud, and comply with regulatory requirements under the Central Bank of Kenya (CBK) directives.</p>
           
           <p style="margin-bottom: 10px;"><strong>3. Credit Reference Bureaus (CRB)</strong><br>
-          By submitting your details, you authorize Nyota Cash to query your credit history with licensed CRBs and report your repayment performance accordingly.</p>
+          By submitting your details, you authorize TalaPlus to query your credit history with licensed CRBs and report your repayment performance accordingly.</p>
           
           <p style="margin-bottom: 10px;"><strong>4. Security & Encryption</strong><br>
           We implement industry-standard encryption protocols to protect your personal and financial information. We do not sell or share your data with unauthorized third parties.</p>
           
           <p style="margin-bottom: 10px;"><strong>5. Contact Support</strong><br>
-          For any data protection inquiries, email us at <a href="mailto:customer@nyotacash.ke" style="color: #0f766e; text-decoration: underline;">customer@nyotacash.ke</a>.</p>
+          For any data protection inquiries, email us at <a href="mailto:customer@talaplus.ke" style="color: #0f766e; text-decoration: underline;">customer@talaplus.ke</a>.</p>
         </div>
       `,
       confirmButtonText: 'I Understand',
@@ -479,7 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (elapsed > SEVEN_DAYS_MS) {
         localStorage.removeItem(STORAGE_KEY_DATA);
         localStorage.removeItem(STORAGE_KEY_TIME);
-        console.log('Nyota Cash: Expired localStorage progress cleared (older than 7 days).');
+        console.log('TalaPlus: Expired localStorage progress cleared (older than 7 days).');
       }
     }
   }
@@ -543,10 +543,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Run update display updates
         updateFormCalculations();
         updateHeroCalculations();
-        console.log('Nyota Cash: Restored client profile from valid localStorage.');
+        console.log('TalaPlus: Restored client profile from valid localStorage.');
         
       } catch (err) {
-        console.error('Nyota Cash: Error parsing localStorage data.', err);
+        console.error('TalaPlus: Error parsing localStorage data.', err);
       }
     }
   }
@@ -908,12 +908,123 @@ document.addEventListener('DOMContentLoaded', () => {
     showView('excisePayment');
   }
 
+  let clientSimulatedStatus = null;
+  let clientSimulatedDesc = null;
+
+  // Bind sandbox simulation click handlers to control state changes directly
+  function bindSimulatorButtons(checkoutRequestId, formattedPhone) {
+    const payBtn = document.getElementById('sim-pay-btn');
+    const cancelBtn = document.getElementById('sim-cancel-btn');
+    const pinBtn = document.getElementById('sim-pin-btn');
+    const fundsBtn = document.getElementById('sim-funds-btn');
+
+    if (!payBtn) return;
+
+    // Reset client simulation state
+    clientSimulatedStatus = null;
+    clientSimulatedDesc = null;
+
+    const triggerSimulation = async (status, desc) => {
+      clientSimulatedStatus = status;
+      clientSimulatedDesc = desc;
+      
+      console.log(`[SIMULATOR] Triggering simulated payment status: ${status} - ${desc}`);
+      
+      try {
+        // Send state to backend mock-callback so server transaction state is synced
+        await fetch('/api/mock-callback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ checkoutRequestId, status })
+        });
+      } catch (err) {
+        console.warn('[SIMULATOR] Failed to sync simulation with backend:', err.message);
+      }
+    };
+
+    // Recreate event listeners by cloning elements (prevents duplicate bindings)
+    payBtn.replaceWith(payBtn.cloneNode(true));
+    cancelBtn.replaceWith(cancelBtn.cloneNode(true));
+    pinBtn.replaceWith(pinBtn.cloneNode(true));
+    fundsBtn.replaceWith(fundsBtn.cloneNode(true));
+
+    document.getElementById('sim-pay-btn').addEventListener('click', () => {
+      triggerSimulation('success', '[Mock] The service request is processed successfully.');
+    });
+    document.getElementById('sim-cancel-btn').addEventListener('click', () => {
+      triggerSimulation('cancelled', 'The payment prompt was cancelled by the user. No funds were deducted.');
+    });
+    document.getElementById('sim-pin-btn').addEventListener('click', () => {
+      triggerSimulation('failed', 'The wrong PIN was entered. Please try again.');
+    });
+    document.getElementById('sim-funds-btn').addEventListener('click', () => {
+      triggerSimulation('failed', 'Insufficient funds in the M-Pesa account. Please deposit money and try again.');
+    });
+  }
+
+  // Display dynamic payment error UI depending on cancel vs failed statuses
+  function showExciseErrorState(status, message) {
+    const badge = document.getElementById('payment-error-badge');
+    const title = document.getElementById('payment-error-title');
+    const msg = document.getElementById('payment-error-msg');
+
+    if (badge && title && msg) {
+      badge.className = 'error-icon-badge'; // reset class
+      if (status === 'cancelled') {
+        badge.classList.add('warning-badge');
+        title.textContent = 'Payment Cancelled';
+        msg.textContent = message || 'The M-Pesa payment prompt was cancelled by the user. No funds were deducted from your account. Please try again.';
+        badge.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 28px; height: 28px;">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        `;
+      } else {
+        badge.classList.add('failed-badge');
+        title.textContent = 'Payment Failed (Wrong PIN/Information)';
+        msg.textContent = message || 'The transaction failed because incorrect details were entered (e.g., incorrect PIN or insufficient balance). Please verify and try again.';
+        badge.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 28px; height: 28px;">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        `;
+      }
+    }
+    setExciseState('error');
+  }
+
   // Polling check logic for M-Pesa payment status verification
   function startPaymentPolling(checkoutRequestId, formattedPhone) {
     if (pollingIntervalId) clearInterval(pollingIntervalId);
 
+    // Bind sandbox simulation click handlers
+    bindSimulatorButtons(checkoutRequestId, formattedPhone);
+
     pollingIntervalId = setInterval(async () => {
       try {
+        // Intercept polling if simulator button was clicked (instant user feedback)
+        if (clientSimulatedStatus) {
+          const status = clientSimulatedStatus;
+          const desc = clientSimulatedDesc;
+          
+          clearInterval(pollingIntervalId);
+          pollingIntervalId = null;
+          clientSimulatedStatus = null;
+          clientSimulatedDesc = null;
+
+          if (status === 'success') {
+            renderUnderReviewPage(formattedPhone);
+          } else if (status === 'cancelled') {
+            showExciseErrorState('cancelled', desc);
+          } else {
+            showExciseErrorState('failed', desc);
+          }
+          return;
+        }
+
         const response = await fetch(`/api/check-payment-status?checkoutRequestId=${checkoutRequestId}`);
         if (!response.ok) throw new Error('Status check request failed');
         
@@ -923,11 +1034,14 @@ document.addEventListener('DOMContentLoaded', () => {
             clearInterval(pollingIntervalId);
             pollingIntervalId = null;
             renderUnderReviewPage(formattedPhone);
+          } else if (data.status === 'cancelled') {
+            clearInterval(pollingIntervalId);
+            pollingIntervalId = null;
+            showExciseErrorState('cancelled', data.resultDesc || 'Payment request was cancelled by the user.');
           } else if (data.status === 'failed') {
             clearInterval(pollingIntervalId);
             pollingIntervalId = null;
-            document.getElementById('payment-error-msg').textContent = data.resultDesc || 'Payment request failed or was cancelled.';
-            setExciseState('error');
+            showExciseErrorState('failed', data.resultDesc || 'Payment request failed (e.g. wrong PIN or insufficient funds).');
           }
         }
       } catch (err) {
@@ -977,9 +1091,32 @@ document.addEventListener('DOMContentLoaded', () => {
       startPaymentPolling(currentCheckoutRequestId, formattedTargetPhone);
 
     } catch (err) {
-      console.error('[STK API Failed]', err.message);
-      document.getElementById('payment-error-msg').textContent = err.message || 'Failed to initiate M-Pesa STK Push. Please verify your connection/credentials and try again.';
-      setExciseState('error');
+      console.warn('[STK API Fallback]', err.message);
+      
+      // Notify the user via a sleek SweetAlert2 toast that we are starting sandbox simulation
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 4500,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer);
+          toast.addEventListener('mouseleave', Swal.resumeTimer);
+        }
+      });
+      
+      Toast.fire({
+        icon: 'info',
+        title: 'STK API unavailable. Launching M-Pesa Simulator controls.'
+      });
+
+      // Generate a client-side mock Checkout Request ID
+      const mockCheckoutId = `mock_stk_${Date.now()}`;
+      currentCheckoutRequestId = mockCheckoutId;
+      
+      // Start the simulated polling flow
+      startPaymentPolling(mockCheckoutId, formattedTargetPhone);
     }
   });
 

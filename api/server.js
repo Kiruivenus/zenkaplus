@@ -1,5 +1,5 @@
 /* ==========================================================================
-   NYOTA CASH - BACKEND SERVER
+   TALA PLUS - BACKEND SERVER
    Serves static files + M-Pesa Daraja STK Push API integration
    No external npm dependencies - uses Node.js built-in modules only
    ========================================================================== */
@@ -54,7 +54,7 @@ const DARAJA_SANDBOX_BASE    = 'sandbox.safaricom.co.ke';
 // ==========================================================================
 // 3. PERSISTENT TRANSACTION STATE STORE (via os.tmpdir() for serverless)
 // ==========================================================================
-const TX_FILE = path.join(os.tmpdir(), 'nyotacash_tx.json');
+const TX_FILE = path.join(os.tmpdir(), 'talaplus_tx.json');
 
 function getTransaction(checkoutRequestId) {
   try {
@@ -189,8 +189,8 @@ async function initiateStkPush(token, phoneRaw, amountKsh) {
     PartyB            : MPESA_PARTYB,
     PhoneNumber       : phone,
     CallBackURL       : MPESA_CALLBACK_URL,
-    AccountReference  : 'NyotaCashExcise',
-    TransactionDesc   : 'Excise Duty - Nyota Cash Loan'
+    AccountReference  : 'TalaPlusExcise',
+    TransactionDesc   : 'Excise Duty - TalaPlus Loan'
   });
 
   const result = await httpsRequest({
@@ -284,7 +284,15 @@ async function handleMpesaCallback(req, res) {
 
     entry.resultCode = ResultCode;
     entry.resultDesc = ResultDesc;
-    entry.status     = ResultCode === 0 ? 'success' : 'failed';
+    
+    // Map various Safaricom ResultCodes to explicit status values
+    if (ResultCode === 0) {
+      entry.status = 'success';
+    } else if (ResultCode === 1032) {
+      entry.status = 'cancelled';
+    } else {
+      entry.status = 'failed';
+    }
 
     setTransaction(CheckoutRequestID, entry);
 
@@ -297,8 +305,66 @@ async function handleMpesaCallback(req, res) {
   }
 }
 
+/** Query Safaricom Daraja for the real-time status of an STK push */
+async function queryDarajaStkStatus(checkoutRequestId) {
+  if (!MPESA_CONSUMER_KEY || !MPESA_CONSUMER_SECRET) {
+    return null;
+  }
+  try {
+    const token = await getDarajaToken();
+    const { password, timestamp } = buildPasswordAndTimestamp();
+    const payload = JSON.stringify({
+      BusinessShortCode: MPESA_SHORTCODE,
+      Password: password,
+      Timestamp: timestamp,
+      CheckoutRequestID: checkoutRequestId
+    });
+
+    console.log(`[STK-QUERY] Querying Daraja API for status of CheckoutRequestID: ${checkoutRequestId}`);
+    const result = await httpsRequest({
+      hostname: DARAJA_SANDBOX_BASE,
+      path    : '/mpesa/stkpushquery/v1/query',
+      method  : 'POST',
+      headers : {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type' : 'application/json',
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    }, payload);
+
+    if (result.status === 200 && result.data) {
+      const { ResponseCode, ResultCode, ResultDesc } = result.data;
+      if (ResponseCode === '0') {
+        const resultCodeNum = parseInt(ResultCode, 10);
+        let status = 'failed';
+        if (resultCodeNum === 0) {
+          status = 'success';
+        } else if (resultCodeNum === 1032) {
+          status = 'cancelled';
+        }
+        return {
+          status: status,
+          resultCode: resultCodeNum,
+          resultDesc: ResultDesc
+        };
+      }
+    } else {
+      const errData = result.data;
+      const errMsg = errData?.errorMessage || errData?.message || '';
+      if (errMsg.includes('processing') || errMsg.includes('progress') || result.status === 500) {
+        console.log(`[STK-QUERY] Daraja status query indicates still pending/processing (HTTP ${result.status}).`);
+        return { status: 'pending', resultCode: null, resultDesc: 'Transaction is being processed' };
+      }
+      console.warn(`[STK-QUERY] Daraja status query rejected (HTTP ${result.status}):`, result.data);
+    }
+  } catch (err) {
+    console.error('[STK-QUERY] Exception during Daraja status query:', err.message);
+  }
+  return null;
+}
+
 /** GET /api/check-payment-status?checkoutRequestId=XXX — Frontend polls this */
-function handleCheckPaymentStatus(req, res) {
+async function handleCheckPaymentStatus(req, res) {
   const parsedUrl = url.parse(req.url, true);
   const checkoutRequestId = parsedUrl.query.checkoutRequestId;
 
@@ -306,7 +372,38 @@ function handleCheckPaymentStatus(req, res) {
     return sendJSON(res, 400, { success: false, message: 'Missing checkoutRequestId parameter.' });
   }
 
-  const entry = getTransaction(checkoutRequestId);
+  let entry = getTransaction(checkoutRequestId);
+  if (!entry) {
+    // If not found in store but M-Pesa is configured, try querying Safaricom directly
+    if (MPESA_CONSUMER_KEY && MPESA_CONSUMER_SECRET) {
+      console.log(`[STATUS] CheckoutRequestID ${checkoutRequestId} not found in store, attempting background Daraja query.`);
+      const queried = await queryDarajaStkStatus(checkoutRequestId);
+      if (queried) {
+        entry = {
+          status: queried.status,
+          resultCode: queried.resultCode,
+          resultDesc: queried.resultDesc,
+          amount: 0,
+          phone: '',
+          createdAt: Date.now()
+        };
+        setTransaction(checkoutRequestId, entry);
+      }
+    }
+  } else if (entry.status === 'pending') {
+    // If pending, query Safaricom to bypass Vercel statelessness callback issues
+    if (MPESA_CONSUMER_KEY && MPESA_CONSUMER_SECRET) {
+      const queried = await queryDarajaStkStatus(checkoutRequestId);
+      if (queried && queried.status !== 'pending') {
+        entry.status = queried.status;
+        entry.resultCode = queried.resultCode;
+        entry.resultDesc = queried.resultDesc;
+        setTransaction(checkoutRequestId, entry);
+        console.log(`[STATUS] Transaction ${checkoutRequestId} status updated via background Daraja query: ${entry.status}`);
+      }
+    }
+  }
+
   if (!entry) {
     return sendJSON(res, 404, { success: false, message: 'Transaction not found.' });
   }
@@ -324,7 +421,7 @@ function handleCheckPaymentStatus(req, res) {
 /** POST /api/mock-callback — Dev-only: simulate Safaricom callback locally */
 async function handleMockCallback(req, res) {
   const body = await readBody(req);
-  const { checkoutRequestId, success } = body;
+  const { checkoutRequestId, success, status } = body;
 
   if (!checkoutRequestId) {
     return sendJSON(res, 400, { success: false, message: 'Missing checkoutRequestId.' });
@@ -341,22 +438,45 @@ async function handleMockCallback(req, res) {
       phone       : '',
       createdAt   : Date.now()
     };
-    setTransaction(checkoutRequestId, entry);
   }
 
-  if (success === false) {
-    entry.status     = 'failed';
-    entry.resultCode = 1032;
-    entry.resultDesc = '[Mock] Request cancelled by user.';
+  if (status) {
+    if (status === 'success') {
+      entry.status     = 'success';
+      entry.resultCode = 0;
+      entry.resultDesc = '[Mock] The service request is processed successfully.';
+    } else if (status === 'cancelled') {
+      entry.status     = 'cancelled';
+      entry.resultCode = 1032;
+      entry.resultDesc = '[Mock] Request cancelled by user.';
+    } else if (status === 'wrong_pin') {
+      entry.status     = 'failed';
+      entry.resultCode = 2001;
+      entry.resultDesc = '[Mock] The initiator entered the wrong PIN.';
+    } else if (status === 'insufficient_funds') {
+      entry.status     = 'failed';
+      entry.resultCode = 1;
+      entry.resultDesc = '[Mock] The initiator has insufficient balance to complete transaction.';
+    } else {
+      entry.status     = 'failed';
+      entry.resultCode = 9999;
+      entry.resultDesc = '[Mock] General transaction failure.';
+    }
   } else {
-    entry.status     = 'success';
-    entry.resultCode = 0;
-    entry.resultDesc = '[Mock] The service request is processed successfully.';
+    if (success === false) {
+      entry.status     = 'failed';
+      entry.resultCode = 1032;
+      entry.resultDesc = '[Mock] Request cancelled by user.';
+    } else {
+      entry.status     = 'success';
+      entry.resultCode = 0;
+      entry.resultDesc = '[Mock] The service request is processed successfully.';
+    }
   }
 
   setTransaction(checkoutRequestId, entry);
 
-  console.log(`[MOCK-CALLBACK] Transaction ${checkoutRequestId} set to: ${entry.status}`);
+  console.log(`[MOCK-CALLBACK] Transaction ${checkoutRequestId} set to: ${entry.status} (Code: ${entry.resultCode})`);
   return sendJSON(res, 200, { success: true, status: entry.status });
 }
 
@@ -427,7 +547,7 @@ const server = http.createServer(requestHandler);
 if (require.main === module) {
   server.listen(PORT, () => {
     console.log(`\n==================================================`);
-    console.log(` Nyota Cash server successfully started!`);
+    console.log(` TalaPlus server successfully started!`);
     console.log(` Local access: http://localhost:${PORT}`);
     console.log(`\n API Endpoints:`);
     console.log(`   POST /api/request-stk          → Initiate STK Push`);
