@@ -35,6 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- LOCALSTORAGE CONFIG ---
   const STORAGE_KEY_DATA = 'talaPlusApplicationData';
   const STORAGE_KEY_TIME = 'talaPlusApplicationSavedAt';
+  const STORAGE_KEY_CHECKOUT_ID = 'talaPlusCheckoutRequestId';
+  const STORAGE_KEY_PAYMENT_PHONE = 'talaPlusPaymentPhone';
   const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 
   // ==========================================================================
@@ -570,6 +572,37 @@ document.addEventListener('DOMContentLoaded', () => {
   // Run localStorage restoration on load
   loadFormData();
 
+  // Check if a payment was already made for the saved profile on load
+  async function checkExistingPaymentOnLoad() {
+    const rawData = localStorage.getItem(STORAGE_KEY_DATA);
+    if (!rawData) return;
+    
+    try {
+      const data = JSON.parse(rawData);
+      const phoneToQuery = data.phoneNumber;
+      if (!phoneToQuery) return;
+      
+      const response = await fetch(`/api/check-payment-status?phone=${encodeURIComponent(phoneToQuery)}`);
+      if (response.ok) {
+        const resData = await response.json();
+        if (resData.success && resData.status === 'success') {
+          renderUnderReviewPage(formatKenyanPhone(phoneToQuery));
+        } else if (resData.success && resData.status === 'pending') {
+          showView('excisePayment');
+          setExciseState('sending');
+          currentCheckoutRequestId = resData.checkoutRequestId;
+          localStorage.setItem(STORAGE_KEY_CHECKOUT_ID, currentCheckoutRequestId);
+          localStorage.setItem(STORAGE_KEY_PAYMENT_PHONE, formatKenyanPhone(phoneToQuery));
+          startPaymentPolling(currentCheckoutRequestId, formatKenyanPhone(phoneToQuery));
+        }
+      }
+    } catch (err) {
+      console.error('[LOAD CHECK ERROR]', err);
+    }
+  }
+
+  checkExistingPaymentOnLoad();
+
   // ==========================================================================
   // 6. VALIDATION CHECKS
   // ==========================================================================
@@ -601,7 +634,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   inputFields.idNumber.addEventListener('input', () => {
-    if (inputFields.idNumber.value.trim() !== '') {
+    const idVal = inputFields.idNumber.value.trim();
+    const idDigits = idVal.replace(/\D/g, '');
+    if (idVal !== '' && idDigits.length >= 7 && idDigits.length <= 10 && idVal === idDigits) {
       showError(inputFields.idNumber, false);
     }
   });
@@ -646,7 +681,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // 3. ID Number validation
-      if (inputFields.idNumber.value.trim() === '') {
+      const idVal = inputFields.idNumber.value.trim();
+      const idDigits = idVal.replace(/\D/g, '');
+      if (idVal === '' || idDigits.length < 7 || idDigits.length > 10 || idVal !== idDigits) {
         showError(inputFields.idNumber, true);
         isValid = false;
       } else {
@@ -877,7 +914,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function renderExcisePaymentPage() {
+  async function renderExcisePaymentPage() {
     const rawData = localStorage.getItem(STORAGE_KEY_DATA);
     if (!rawData) {
       showView('landing');
@@ -904,8 +941,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Reset view states
     showError(excisePhoneInput, false);
-    setExciseState('idle');
+    setExciseState('sending');
     showView('excisePayment');
+
+    try {
+      const phoneToQuery = data.phoneNumber;
+      const response = await fetch(`/api/check-payment-status?phone=${encodeURIComponent(phoneToQuery)}`);
+      if (response.ok) {
+        const resData = await response.json();
+        if (resData.success && resData.status === 'success') {
+          localStorage.removeItem(STORAGE_KEY_CHECKOUT_ID);
+          localStorage.removeItem(STORAGE_KEY_PAYMENT_PHONE);
+          renderUnderReviewPage(formatKenyanPhone(phoneToQuery));
+          return;
+        } else if (resData.success && resData.status === 'pending') {
+          currentCheckoutRequestId = resData.checkoutRequestId;
+          localStorage.setItem(STORAGE_KEY_CHECKOUT_ID, currentCheckoutRequestId);
+          localStorage.setItem(STORAGE_KEY_PAYMENT_PHONE, formatKenyanPhone(phoneToQuery));
+          startPaymentPolling(currentCheckoutRequestId, formatKenyanPhone(phoneToQuery));
+          return;
+        }
+      }
+    } catch (err) {
+      console.error('[EXCISE PAGE CHECK ERROR]', err);
+    }
+
+    setExciseState('idle');
   }
 
 
@@ -967,14 +1028,20 @@ document.addEventListener('DOMContentLoaded', () => {
           if (data.status === 'success') {
             clearInterval(pollingIntervalId);
             pollingIntervalId = null;
+            localStorage.removeItem(STORAGE_KEY_CHECKOUT_ID);
+            localStorage.removeItem(STORAGE_KEY_PAYMENT_PHONE);
             renderUnderReviewPage(formattedPhone);
           } else if (data.status === 'cancelled') {
             clearInterval(pollingIntervalId);
             pollingIntervalId = null;
+            localStorage.removeItem(STORAGE_KEY_CHECKOUT_ID);
+            localStorage.removeItem(STORAGE_KEY_PAYMENT_PHONE);
             showExciseErrorState('cancelled', data.resultDesc || 'Payment request was cancelled by the user.');
           } else if (data.status === 'failed') {
             clearInterval(pollingIntervalId);
             pollingIntervalId = null;
+            localStorage.removeItem(STORAGE_KEY_CHECKOUT_ID);
+            localStorage.removeItem(STORAGE_KEY_PAYMENT_PHONE);
             showExciseErrorState('failed', data.resultDesc || 'Payment request failed (e.g. wrong PIN or insufficient funds).');
           }
         }
@@ -1021,7 +1088,14 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(resData.message || 'M-Pesa API initiation failed');
       }
 
+      if (resData.alreadyPaid) {
+        renderUnderReviewPage(formattedTargetPhone);
+        return;
+      }
+
       currentCheckoutRequestId = resData.checkoutRequestId;
+      localStorage.setItem(STORAGE_KEY_CHECKOUT_ID, currentCheckoutRequestId);
+      localStorage.setItem(STORAGE_KEY_PAYMENT_PHONE, formattedTargetPhone);
       startPaymentPolling(currentCheckoutRequestId, formattedTargetPhone);
 
     } catch (err) {
@@ -1049,7 +1123,29 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Retry STK payment flow on error view
-  document.getElementById('retry-stk-btn').addEventListener('click', () => {
+  document.getElementById('retry-stk-btn').addEventListener('click', async () => {
+    // Check if payment was made in the background before going back to idle
+    const rawData = localStorage.getItem(STORAGE_KEY_DATA);
+    if (rawData) {
+      try {
+        const data = JSON.parse(rawData);
+        const phoneToQuery = data.phoneNumber;
+        if (phoneToQuery) {
+          const response = await fetch(`/api/check-payment-status?phone=${encodeURIComponent(phoneToQuery)}`);
+          if (response.ok) {
+            const resData = await response.json();
+            if (resData.success && resData.status === 'success') {
+              localStorage.removeItem(STORAGE_KEY_CHECKOUT_ID);
+              localStorage.removeItem(STORAGE_KEY_PAYMENT_PHONE);
+              renderUnderReviewPage(formatKenyanPhone(phoneToQuery));
+              return;
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[RETRY CHECK ERROR]', err);
+      }
+    }
     setExciseState('idle');
   });
 
@@ -1119,6 +1215,8 @@ document.addEventListener('DOMContentLoaded', () => {
           clearInterval(pollingIntervalId);
           pollingIntervalId = null;
         }
+        localStorage.removeItem(STORAGE_KEY_CHECKOUT_ID);
+        localStorage.removeItem(STORAGE_KEY_PAYMENT_PHONE);
         showView('landing');
       }
     });

@@ -85,6 +85,42 @@ function setTransaction(checkoutRequestId, data) {
   }
 }
 
+/** Scan for a recent successful transaction matching phone number (within 24 hours) */
+function findRecentSuccessfulTransaction(phone) {
+  try {
+    if (fs.existsSync(TX_FILE)) {
+      const store = JSON.parse(fs.readFileSync(TX_FILE, 'utf-8'));
+      const cleanPhone = phone.replace(/[\s\+]/g, '');
+      let matchNumber = cleanPhone;
+      if (cleanPhone.startsWith('254') && cleanPhone.length > 9) {
+        matchNumber = cleanPhone.substring(3);
+      } else if (cleanPhone.startsWith('0') && cleanPhone.length > 9) {
+        matchNumber = cleanPhone.substring(1);
+      }
+      
+      for (const checkoutId in store) {
+        const tx = store[checkoutId];
+        const txPhone = (tx.phone || '').replace(/[\s\+]/g, '');
+        let cleanTxPhone = txPhone;
+        if (txPhone.startsWith('254') && txPhone.length > 9) {
+          cleanTxPhone = txPhone.substring(3);
+        } else if (txPhone.startsWith('0') && txPhone.length > 9) {
+          cleanTxPhone = txPhone.substring(1);
+        }
+        
+        if (tx.status === 'success' && cleanTxPhone === matchNumber && matchNumber.length >= 9) {
+          if (Date.now() - (tx.createdAt || 0) < 24 * 60 * 60 * 1000) {
+            return { checkoutRequestId: checkoutId, ...tx };
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[STORE] Error finding recent transaction:', err.message);
+  }
+  return null;
+}
+
 // ==========================================================================
 // 4. UTILITY HELPERS
 // ==========================================================================
@@ -178,7 +214,7 @@ function buildPasswordAndTimestamp() {
 }
 
 /** Initiate STK Push on Safaricom Daraja */
-async function initiateStkPush(token, phoneRaw, amountKsh) {
+async function initiateStkPush(token, phoneRaw, amountKsh, callbackUrl) {
   const { password, timestamp } = buildPasswordAndTimestamp();
 
   // Normalize phone to 254XXXXXXXXX format
@@ -195,7 +231,7 @@ async function initiateStkPush(token, phoneRaw, amountKsh) {
     PartyA            : phone,
     PartyB            : MPESA_PARTYB,
     PhoneNumber       : phone,
-    CallBackURL       : MPESA_CALLBACK_URL,
+    CallBackURL       : callbackUrl,
     AccountReference  : 'TalaPlusExcise',
     TransactionDesc   : 'Excise Duty - TalaPlus Loan'
   });
@@ -227,6 +263,18 @@ async function handleRequestStk(req, res) {
   const { phone, amount } = body;
   if (!phone || !amount) {
     return sendJSON(res, 400, { success: false, message: 'Missing phone or amount.' });
+  }
+
+  // Check if there is already a successful transaction for this phone number
+  const recentTx = findRecentSuccessfulTransaction(phone);
+  if (recentTx) {
+    console.log(`[STK] Found recent successful transaction for ${phone}: ${recentTx.checkoutRequestId}`);
+    return sendJSON(res, 200, {
+      success          : true,
+      alreadyPaid      : true,
+      checkoutRequestId: recentTx.checkoutRequestId,
+      customerMessage  : 'Excise duty has already been paid for this application.'
+    });
   }
 
   const isDemoMode = !MPESA_CONSUMER_KEY || !MPESA_CONSUMER_SECRET || body.demo === true || body.demo === 'true';
@@ -272,7 +320,17 @@ async function handleRequestStk(req, res) {
 
   try {
     const token  = await getDarajaToken();
-    const result = await initiateStkPush(token, phone, amount);
+
+    // Determine callback URL dynamically based on host header to prevent ngrok configuration drops
+    const host = req.headers.host || '';
+    let callbackUrl = MPESA_CALLBACK_URL;
+    if (!callbackUrl || callbackUrl.includes('your-public-domain.ngrok-free.app') || (callbackUrl.includes('localhost') && !host.includes('localhost'))) {
+      const protocol = req.headers['x-forwarded-proto'] || 'https';
+      callbackUrl = `${protocol}://${host}/api/mpesa-callback`;
+    }
+    console.log(`[STK] Using callback URL: ${callbackUrl}`);
+
+    const result = await initiateStkPush(token, phone, amount, callbackUrl);
 
     // Check if result is blocked by CDN/Incapsula (HTML response returned)
     const resultStr = typeof result === 'string' ? result : JSON.stringify(result);
@@ -331,12 +389,15 @@ async function handleMpesaCallback(req, res) {
     }
 
     const { CheckoutRequestID, ResultCode, ResultDesc } = stkCallback;
-    const entry = getTransaction(CheckoutRequestID);
+    let entry = getTransaction(CheckoutRequestID);
 
     if (!entry) {
-      console.warn(`[CALLBACK] Unknown CheckoutRequestID: ${CheckoutRequestID}`);
-      // Still respond 200 so Safaricom doesn't retry
-      return sendJSON(res, 200, { ResultCode: 0, ResultDesc: 'Accepted' });
+      console.warn(`[CALLBACK] CheckoutRequestID ${CheckoutRequestID} not found in store, creating new entry.`);
+      entry = {
+        amount: 0,
+        phone: '',
+        createdAt: Date.now()
+      };
     }
 
     entry.resultCode = ResultCode;
@@ -439,9 +500,64 @@ async function queryDarajaStkStatus(checkoutRequestId) {
 async function handleCheckPaymentStatus(req, res) {
   const parsedUrl = url.parse(req.url, true);
   const checkoutRequestId = parsedUrl.query.checkoutRequestId;
+  const phone = parsedUrl.query.phone;
 
-  if (!checkoutRequestId) {
-    return sendJSON(res, 400, { success: false, message: 'Missing checkoutRequestId parameter.' });
+  if (!checkoutRequestId && !phone) {
+    return sendJSON(res, 400, { success: false, message: 'Missing checkoutRequestId or phone parameter.' });
+  }
+
+  // If phone is provided, we can look up if they paid
+  if (phone) {
+    const recentTx = findRecentSuccessfulTransaction(phone);
+    if (recentTx) {
+      return sendJSON(res, 200, {
+        success: true,
+        status: 'success',
+        checkoutRequestId: recentTx.checkoutRequestId,
+        amount: recentTx.amount,
+        phone: recentTx.phone,
+        resultDesc: recentTx.resultDesc
+      });
+    }
+    // If not successful and no checkout ID was passed, check pending
+    if (!checkoutRequestId) {
+      try {
+        if (fs.existsSync(TX_FILE)) {
+          const store = JSON.parse(fs.readFileSync(TX_FILE, 'utf-8'));
+          const cleanPhone = phone.replace(/[\s\+]/g, '');
+          let matchNumber = cleanPhone;
+          if (cleanPhone.startsWith('254') && cleanPhone.length > 9) {
+            matchNumber = cleanPhone.substring(3);
+          } else if (cleanPhone.startsWith('0') && cleanPhone.length > 9) {
+            matchNumber = cleanPhone.substring(1);
+          }
+
+          for (const checkoutId in store) {
+            const tx = store[checkoutId];
+            const txPhone = (tx.phone || '').replace(/[\s\+]/g, '');
+            let cleanTxPhone = txPhone;
+            if (txPhone.startsWith('254') && txPhone.length > 9) {
+              cleanTxPhone = txPhone.substring(3);
+            } else if (txPhone.startsWith('0') && txPhone.length > 9) {
+              cleanTxPhone = txPhone.substring(1);
+            }
+
+            if (tx.status === 'pending' && cleanTxPhone === matchNumber && matchNumber.length >= 9) {
+              return sendJSON(res, 200, {
+                success: true,
+                status: 'pending',
+                checkoutRequestId: checkoutId,
+                amount: tx.amount,
+                phone: tx.phone
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[STORE] Error finding pending transaction:', err.message);
+      }
+      return sendJSON(res, 200, { success: false, status: 'none', message: 'No transaction found for this phone number.' });
+    }
   }
 
   let entry = getTransaction(checkoutRequestId);
