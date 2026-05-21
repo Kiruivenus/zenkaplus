@@ -415,12 +415,19 @@ async function queryDarajaStkStatus(checkoutRequestId) {
       }
     } else {
       const errData = result.data;
+      const errDataStr = typeof errData === 'string' ? errData : JSON.stringify(errData);
       const errMsg = errData?.errorMessage || errData?.message || '';
       if (errMsg.includes('processing') || errMsg.includes('progress') || result.status === 500) {
         console.log(`[STK-QUERY] Daraja status query indicates still pending/processing (HTTP ${result.status}).`);
         return { status: 'pending', resultCode: null, resultDesc: 'Transaction is being processed' };
       }
-      console.warn(`[STK-QUERY] Daraja status query rejected (HTTP ${result.status}):`, result.data);
+      if (errDataStr.includes('<html') || errDataStr.includes('Incapsula') || errDataStr.includes('incident_id')) {
+        console.warn(`[STK-QUERY] Daraja status query rejected (HTTP ${result.status}): Blocked by CDN/Incapsula DDoS protection.`);
+      } else if (result.status === 429) {
+        console.warn(`[STK-QUERY] Daraja status query rejected (HTTP 429): Safaricom Daraja API Spike Arrest / Rate Limit exceeded.`);
+      } else {
+        console.warn(`[STK-QUERY] Daraja status query rejected (HTTP ${result.status}):`, errDataStr);
+      }
     }
   } catch (err) {
     console.error('[STK-QUERY] Exception during Daraja status query:', err.message);
