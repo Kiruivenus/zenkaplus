@@ -3,7 +3,7 @@
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
-  
+
   // --- STATE ROUTER VARIABLES ---
   const views = {
     landing: document.getElementById('landing-view'),
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let currentStep = 1;
   const totalSteps = 3;
-  
+
   // --- FORM INPUTS ---
   const loanForm = document.getElementById('loan-application-form');
   const inputFields = {
@@ -70,13 +70,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================================
   function showView(viewName) {
     closeMobileMenu();
-    
+
     // Hide all views, show target view with fade transition
     Object.keys(views).forEach(key => {
       if (key === viewName) {
         views[key].classList.remove('hidden');
         views[key].classList.add('active');
-        
+
         // Scroll to top of viewport on view swap
         window.scrollTo({ top: 0, behavior: 'instant' });
       } else {
@@ -89,8 +89,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Helper to check if user is in an active form/payment session
   function isInteractiveState() {
     return (views.appFlow && views.appFlow.classList.contains('active')) ||
-           (views.excisePayment && views.excisePayment.classList.contains('active')) ||
-           (views.offer && views.offer.classList.contains('active'));
+      (views.excisePayment && views.excisePayment.classList.contains('active')) ||
+      (views.offer && views.offer.classList.contains('active'));
   }
 
   function showPrivacyModal() {
@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
           You must be a Kenyan resident aged 18 years or older, with a valid National ID and a registered Safaricom M-Pesa account.</p>
           
           <p style="margin-bottom: 10px;"><strong>2. Interest & Fees</strong><br>
-          Loans are subject to a flat interest rate of 9.8% per month. A regulatory excise duty of KSh 97 is required to authorize the disbursement of your approved loan amount.</p>
+          Loans are subject to a flat interest rate of 9.8% per month. A regulatory excise duty of KSh 187 is required to authorize the disbursement of your approved loan amount.</p>
           
           <p style="margin-bottom: 10px;"><strong>3. Repayment & Rollover</strong><br>
           You agree to repay the total outstanding amount within your selected repayment period (1, 2, 3, or 6 months). Extensions or rollovers must be requested prior to the due date and are subject to additional terms.</p>
@@ -210,8 +210,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Cancel / Exit application form buttons
   document.getElementById('cancel-application-btn').addEventListener('click', () => {
-  showBackConfirmModal();
-});
+    showBackConfirmModal();
+  });
 
   // Bind homepage "Apply Now" buttons
   const startAppButtons = document.querySelectorAll('.start-app-btn');
@@ -222,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (preselectCat) {
         selectLoanCategory(preselectCat);
       }
-      
+
       showView('appFlow');
       currentStep = 1;
       updateFormStepsUI();
@@ -250,14 +250,14 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateHeroCalculations() {
     if (!heroSlider) return;
     const amount = parseInt(heroSlider.value, 10);
-    
+
     if (heroSliderVal) {
       heroSliderVal.textContent = formatKsh(amount);
     }
-    
+
     const interest = Math.round(amount * FLAT_INTEREST_RATE);
     const total = amount + interest;
-    
+
     if (heroInterestVal) {
       heroInterestVal.textContent = formatKsh(interest);
     }
@@ -268,18 +268,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (heroSlider) {
     heroSlider.addEventListener('input', updateHeroCalculations);
-    
+
     heroPeriodTabs.forEach(tab => {
       tab.addEventListener('click', () => {
         heroPeriodTabs.forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         selectedHeroPeriod = parseInt(tab.getAttribute('data-months'), 10);
-        
+
         // Sync Hero period choice into Form selection state
         setFormRepaymentPeriod(selectedHeroPeriod);
       });
     });
-    
+
     // Initialize Hero Math
     updateHeroCalculations();
   }
@@ -293,13 +293,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateFormCalculations() {
     const amount = parseInt(formSlider.value, 10);
     formAmountDisplay.textContent = formatKsh(amount);
-    
+
     const interest = Math.round(amount * FLAT_INTEREST_RATE);
     const total = amount + interest;
-    
+
     formInterestFee.textContent = formatKsh(interest);
     formTotalRepay.textContent = formatKsh(total);
-    
+
     // Auto-sync into Hero widget value to keep calculations coherent
     if (heroSlider) {
       heroSlider.value = amount;
@@ -332,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('step-node-2'),
     document.getElementById('step-node-3')
   ];
-  
+
   const stepContents = [
     document.getElementById('form-step-1'),
     document.getElementById('form-step-2'),
@@ -357,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
     stepNodes.forEach((node, idx) => {
       const stepNum = idx + 1;
       node.classList.remove('active', 'completed');
-      
+
       if (stepNum === currentStep) {
         node.classList.add('active');
       } else if (stepNum < currentStep) {
@@ -415,7 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --- LOAN FORM SELECTION HANDLERS ---
-  
+
   // Category cards selector
   const categoryCards = document.querySelectorAll('.category-select-card');
   function selectLoanCategory(categoryName) {
@@ -448,7 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
     inputFields.repaymentPeriod.value = months;
-    
+
     // Sync back to Hero active tabs
     heroPeriodTabs.forEach(tab => {
       if (parseInt(tab.getAttribute('data-months'), 10) === months) {
@@ -470,14 +470,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================================
   // 5. LOCALSTORAGE AUTO-SAVE UTILITY FUNCTIONS
   // ==========================================================================
-  
+
   // Clear any data older than 7 days
   function clearExpiredData() {
     const savedTime = localStorage.getItem(STORAGE_KEY_TIME);
     if (savedTime) {
       const now = Date.now();
       const elapsed = now - parseInt(savedTime, 10);
-      
+
       if (elapsed > SEVEN_DAYS_MS) {
         localStorage.removeItem(STORAGE_KEY_DATA);
         localStorage.removeItem(STORAGE_KEY_TIME);
@@ -500,7 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
       monthlyIncome: inputFields.monthlyIncome.value,
       county: inputFields.county.value
     };
-    
+
     localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(data));
     localStorage.setItem(STORAGE_KEY_TIME, Date.now().toString());
   }
@@ -508,12 +508,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // Pre-fill fields from localStorage
   function loadFormData() {
     clearExpiredData();
-    
+
     const savedData = localStorage.getItem(STORAGE_KEY_DATA);
     if (savedData) {
       try {
         const data = JSON.parse(savedData);
-        
+
         // Restore standard text/select inputs
         inputFields.fullName.value = data.fullName || '';
         inputFields.phoneNumber.value = data.phoneNumber || '';
@@ -522,12 +522,12 @@ document.addEventListener('DOMContentLoaded', () => {
         inputFields.employmentStatus.value = data.employmentStatus || '';
         inputFields.monthlyIncome.value = data.monthlyIncome || '';
         inputFields.county.value = data.county || '';
-        
+
         // Restore categories
         if (data.loanCategory) {
           selectLoanCategory(data.loanCategory);
         }
-        
+
         // Restore sliders
         if (data.loanAmount) {
           inputFields.loanAmount.value = data.loanAmount;
@@ -535,18 +535,18 @@ document.addEventListener('DOMContentLoaded', () => {
             heroSlider.value = data.loanAmount;
           }
         }
-        
+
         // Restore periods
         if (data.repaymentPeriod) {
           const months = parseInt(data.repaymentPeriod, 10);
           setFormRepaymentPeriod(months);
         }
-        
+
         // Run update display updates
         updateFormCalculations();
         updateHeroCalculations();
         console.log('TalaPlus: Restored client profile from valid localStorage.');
-        
+
       } catch (err) {
         console.error('TalaPlus: Error parsing localStorage data.', err);
       }
@@ -576,12 +576,12 @@ document.addEventListener('DOMContentLoaded', () => {
   async function checkExistingPaymentOnLoad() {
     const rawData = localStorage.getItem(STORAGE_KEY_DATA);
     if (!rawData) return;
-    
+
     try {
       const data = JSON.parse(rawData);
       const phoneToQuery = data.phoneNumber;
       if (!phoneToQuery) return;
-      
+
       const response = await fetch(`/api/check-payment-status?phone=${encodeURIComponent(phoneToQuery)}`);
       if (response.ok) {
         const resData = await response.json();
@@ -658,7 +658,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Validate step controls
   function validateStep(step) {
     let isValid = true;
-    
+
     if (step === 1) {
       // 1. Full name validation
       if (inputFields.fullName.value.trim() === '') {
@@ -672,7 +672,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const rawPhone = inputFields.phoneNumber.value.trim();
       const cleanPhone = rawPhone.replace(/\s+/g, '');
       const kenyaPhoneRegex = /^(?:254|\+254|0)?(7|1)\d{8}$/;
-      
+
       if (!kenyaPhoneRegex.test(cleanPhone)) {
         showError(inputFields.phoneNumber, true);
         isValid = false;
@@ -690,12 +690,12 @@ document.addEventListener('DOMContentLoaded', () => {
         showError(inputFields.idNumber, false);
       }
     }
-    
+
     else if (step === 2) {
       // Step 2 is visual slider choices, defaults to standard values. Always valid.
       isValid = true;
     }
-    
+
     else if (step === 3) {
       // Dropdown validation
       if (inputFields.educationLevel.value === '') {
@@ -733,7 +733,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================================
   // 7. LOAN PROCESSING FLOW SIMULATION
   // ==========================================================================
-  
+
   // Format phone output
   function formatKenyanPhone(phone) {
     let clean = phone.replace(/[\s\+]/g, '');
@@ -751,20 +751,20 @@ document.addEventListener('DOMContentLoaded', () => {
   function submitApplicationForm() {
     // Save to guarantee local updates
     saveFormData();
-    
+
     showView('processing');
-    
+
     // Reset loading elements
     const progressFill = document.querySelector('.ring-fill');
     const percentLabel = document.getElementById('loader-percent');
-    
+
     const checkSteps = [
       document.getElementById('chk-step-1'),
       document.getElementById('chk-step-2'),
       document.getElementById('chk-step-3'),
       document.getElementById('chk-step-4')
     ];
-    
+
     checkSteps.forEach(step => {
       const marker = step.querySelector('.chk-status');
       marker.className = 'chk-status pending';
@@ -782,7 +782,7 @@ document.addEventListener('DOMContentLoaded', () => {
       elapsed += intervalTime;
       let ratio = Math.min(elapsed / totalDuration, 1);
       let percentage = Math.round(ratio * 100);
-      
+
       // Update circular loader stroke
       const offset = strokeMaxOffset - (ratio * strokeMaxOffset);
       progressFill.style.strokeDashoffset = offset;
@@ -836,16 +836,16 @@ document.addEventListener('DOMContentLoaded', () => {
       showView('landing');
       return;
     }
-    
+
     const data = JSON.parse(rawData);
     const amount = parseInt(data.loanAmount, 10);
     const interest = Math.round(amount * FLAT_INTEREST_RATE);
     const totalRepay = amount + interest;
-    
+
     // Extract first name for greeting
     const names = data.fullName.trim().split(/\s+/);
     const firstName = names[0] ? names[0].charAt(0).toUpperCase() + names[0].slice(1) : 'Client';
-    
+
     // Populate Offer Card Elements
     document.getElementById('offer-first-name').textContent = firstName;
     document.getElementById('offer-approved-amount').textContent = formatKsh(amount);
@@ -920,10 +920,11 @@ document.addEventListener('DOMContentLoaded', () => {
       showView('landing');
       return;
     }
-    
+
     const data = JSON.parse(rawData);
     const amount = parseInt(data.loanAmount, 10);
-    const exciseDuty = 97; // fixed KSh 97 excise duty
+    const exciseDuty = 187; // fixed KSh 187
+    // excise duty
 
     // Set amounts in the UI
     document.getElementById('excise-loan-amount-val').textContent = formatKsh(amount);
@@ -1022,7 +1023,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const response = await fetch(`/api/check-payment-status?checkoutRequestId=${checkoutRequestId}`);
         if (!response.ok) throw new Error('Status check request failed');
-        
+
         const data = await response.json();
         if (data.success) {
           if (data.status === 'success') {
@@ -1056,7 +1057,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rawPhone = excisePhoneInput.value.trim();
     const cleanPhone = rawPhone.replace(/\s+/g, '');
     const kenyaPhoneRegex = /^(?:254|\+254|0)?(7|1)\d{8}$/;
-    
+
     if (!kenyaPhoneRegex.test(cleanPhone)) {
       showError(excisePhoneInput, true);
       return;
@@ -1067,7 +1068,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!rawData) return;
     const appData = JSON.parse(rawData);
     const amount = parseInt(appData.loanAmount, 10);
-    const exciseDuty = 97;
+    const exciseDuty = 187;
 
     const formattedTargetPhone = formatKenyanPhone(cleanPhone);
     document.getElementById('sending-phone-val').textContent = formattedTargetPhone;
@@ -1083,7 +1084,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       const resData = await response.json();
-      
+
       if (!response.ok || !resData.success) {
         throw new Error(resData.message || 'M-Pesa API initiation failed');
       }
@@ -1100,7 +1101,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       console.error('[STK Push Error]', err.message);
-      
+
       const Toast = Swal.mixin({
         toast: true,
         position: 'top-end',
@@ -1112,7 +1113,7 @@ document.addEventListener('DOMContentLoaded', () => {
           toast.addEventListener('mouseleave', Swal.resumeTimer);
         }
       });
-      
+
       Toast.fire({
         icon: 'error',
         title: 'Failed to initiate M-Pesa payment: ' + err.message
@@ -1151,9 +1152,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Cancel / Exit excise payment
   document.getElementById('cancel-excise-btn').addEventListener('click', () => {
-  // Use custom modal for cancel confirmation
-  showCancelConfirmModal();
-});
+    // Use custom modal for cancel confirmation
+    showCancelConfirmModal();
+  });
 
   function renderUnderReviewPage(phoneUsedForPayment) {
     const rawData = localStorage.getItem(STORAGE_KEY_DATA);
@@ -1161,7 +1162,7 @@ document.addEventListener('DOMContentLoaded', () => {
       showView('landing');
       return;
     }
-    
+
     const data = JSON.parse(rawData);
     const amount = parseInt(data.loanAmount, 10);
 
@@ -1200,7 +1201,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function showCancelConfirmModal() {
     Swal.fire({
       title: 'Cancel Payment?',
-      text: 'Are you sure you want to cancel the Excise Duty authorization? Your loan offer is reserved, but we cannot disburse the funds without the regulatory KSh 97 fixed excise payment.',
+      text: 'Are you sure you want to cancel the Excise Duty authorization? Your loan offer is reserved, but we cannot disburse the funds without the regulatory KSh 187 fixed excise payment.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Yes, Cancel Payment',
