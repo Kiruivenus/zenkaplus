@@ -1,4 +1,4 @@
-﻿const requestHandler = require('./api/server.js');
+const requestHandler = require('./api/server.js');
 const { server, PORT } = requestHandler;
 
 if (require.main === module) {
@@ -7,10 +7,10 @@ if (require.main === module) {
     console.log(` ZenkaPlus server successfully started!`);
     console.log(` Local access: http://localhost:${PORT}`);
     console.log(`\n API Endpoints:`);
-    console.log(`   POST /api/request-stk          â†’ Initiate STK Push`);
-    console.log(`   POST /api/mpesa-callback        â†’ Safaricom payment callback`);
-    console.log(`   GET  /api/check-payment-status  â†’ Poll transaction status`);
-    console.log(`   POST /api/mock-callback         â†’ Dev-only: simulate callback`);
+    console.log(`   POST /api/request-stk          -> Initiate STK Push`);
+    console.log(`   POST /api/mpesa-callback        -> Safaricom payment callback`);
+    console.log(`   GET  /api/check-payment-status  -> Poll transaction status`);
+    console.log(`   POST /api/mock-callback         -> Dev-only: simulate callback`);
     console.log(`==================================================\n`);
   });
 }
