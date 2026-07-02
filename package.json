@@ -1,5 +1,5 @@
-﻿{
-  "name": "ZenkaPlus",
+{
+  "name": "zenkaplus",
   "version": "1.0.0",
   "description": "ZenkaPlus Backend Server",
   "main": "server.js",
