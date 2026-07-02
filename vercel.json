@@ -4,6 +4,9 @@
     {
       "src": "/api/(.*)",
       "dest": "/api/server.js"
+    },
+    {
+      "handle": "filesystem"
     }
   ]
 }
