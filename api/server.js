@@ -117,6 +117,9 @@ function getExciseDuty() {
 }
 
 async function connectToMongo() {
+  if (isMongoConnected && db && mongoClient) {
+    return;
+  }
   if (!MongoClient) {
     console.warn('[MONGO] MongoDB client not available. Operating in local fallback (JSON-file) mode.');
     await loadDynamicConfig();
@@ -144,9 +147,6 @@ async function connectToMongo() {
     await loadDynamicConfig();
   }
 }
-
-// Start MongoDB connection
-connectToMongo();
 
 // ==========================================================================
 // 3. PERSISTENT TRANSACTION STATE STORE (via os.tmpdir() for serverless)
@@ -1049,6 +1049,13 @@ async function handleGetPublicConfig(req, res) {
 // 7. HTTP SERVER + ROUTER
 // ==========================================================================
 const requestHandler = async (req, res) => {
+  // Establish connection lazily to reuse socket connections in serverless environments
+  try {
+    await connectToMongo();
+  } catch (err) {
+    console.error('[MONGO] Lazy connection error:', err.message);
+  }
+
   const parsedUrl = url.parse(req.url);
   const pathname  = parsedUrl.pathname;
   const method    = req.method.toUpperCase();
