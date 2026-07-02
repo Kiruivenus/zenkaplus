@@ -1,7 +1,7 @@
-{
-  "name": "talaplus",
+﻿{
+  "name": "ZenkaPlus",
   "version": "1.0.0",
-  "description": "TalaPlus Backend Server",
+  "description": "ZenkaPlus Backend Server",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TalaPlus | Admin Dashboard</title>
+  <title>ZenkaPlus | Admin Dashboard</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -471,13 +471,13 @@
   <!-- 1. LOGIN SCREEN -->
   <div class="login-container" id="login-screen">
     <div class="login-card">
-      <div class="login-logo">TalaPlus</div>
+      <div class="login-logo">ZenkaPlus</div>
       <div class="login-subtitle">Admin Control Center</div>
       
       <form id="login-form">
         <div class="form-group">
           <label class="form-label" for="passcode-input">Admin Passcode</label>
-          <input class="input-field" type="password" id="passcode-input" placeholder="••••••••" required>
+          <input class="input-field" type="password" id="passcode-input" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" required>
         </div>
         <button class="btn" type="submit">Authenticate</button>
       </form>
@@ -489,7 +489,7 @@
     <!-- Header -->
     <header class="dashboard-header">
       <div>
-        <div class="brand-title">TalaPlus Admin</div>
+        <div class="brand-title">ZenkaPlus Admin</div>
         <div style="color: #64748b; font-size: 0.85rem; margin-top: 0.25rem;">Live Analytics & Management Panel</div>
       </div>
       <div class="header-actions">
@@ -621,7 +621,7 @@
   </div>
 
   <footer>
-    <p>&copy; 2026 TalaPlus Operations. All rights reserved.</p>
+    <p>&copy; 2026 ZenkaPlus Operations. All rights reserved.</p>
   </footer>
 
   <script>
@@ -682,15 +682,15 @@
 
     // Helper: check localStorage for session passcode
     function getPasscode() {
-      return localStorage.getItem('talaplus_admin_passcode') || '';
+      return localStorage.getItem('ZenkaPlus_admin_passcode') || '';
     }
 
     function setPasscode(code) {
-      localStorage.setItem('talaplus_admin_passcode', code);
+      localStorage.setItem('ZenkaPlus_admin_passcode', code);
     }
 
     function clearPasscode() {
-      localStorage.removeItem('talaplus_admin_passcode');
+      localStorage.removeItem('ZenkaPlus_admin_passcode');
     }
 
     // Attempt to load data

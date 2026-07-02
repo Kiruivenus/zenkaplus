@@ -1,5 +1,5 @@
-/* ==========================================================================
-   TALA PLUS - MAIN APPLICATION LOGIC
+﻿/* ==========================================================================
+   Zenka Plus - MAIN APPLICATION LOGIC
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -40,12 +40,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- TRACK VISITS ---
-  if (!sessionStorage.getItem('talaPlusVisited')) {
+  if (!sessionStorage.getItem('ZenkaPlusVisited')) {
     fetch('/api/track-visit', { method: 'POST' })
       .then(res => res.json())
       .then(data => {
         if (data && data.success) {
-          sessionStorage.setItem('talaPlusVisited', 'true');
+          sessionStorage.setItem('ZenkaPlusVisited', 'true');
         }
       })
       .catch(err => console.error('[ANALYTICS] Failed to track page view:', err));
@@ -82,10 +82,10 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // --- LOCALSTORAGE CONFIG ---
-  const STORAGE_KEY_DATA = 'talaPlusApplicationData';
-  const STORAGE_KEY_TIME = 'talaPlusApplicationSavedAt';
-  const STORAGE_KEY_CHECKOUT_ID = 'talaPlusCheckoutRequestId';
-  const STORAGE_KEY_PAYMENT_PHONE = 'talaPlusPaymentPhone';
+  const STORAGE_KEY_DATA = 'ZenkaPlusApplicationData';
+  const STORAGE_KEY_TIME = 'ZenkaPlusApplicationSavedAt';
+  const STORAGE_KEY_CHECKOUT_ID = 'ZenkaPlusCheckoutRequestId';
+  const STORAGE_KEY_PAYMENT_PHONE = 'ZenkaPlusPaymentPhone';
   const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 
   // ==========================================================================
@@ -154,13 +154,13 @@ document.addEventListener('DOMContentLoaded', () => {
           We use this data to evaluate creditworthiness, process transactions, prevent fraud, and comply with regulatory requirements under the Central Bank of Kenya (CBK) directives.</p>
           
           <p style="margin-bottom: 10px;"><strong>3. Credit Reference Bureaus (CRB)</strong><br>
-          By submitting your details, you authorize TalaPlus to query your credit history with licensed CRBs and report your repayment performance accordingly.</p>
+          By submitting your details, you authorize ZenkaPlus to query your credit history with licensed CRBs and report your repayment performance accordingly.</p>
           
           <p style="margin-bottom: 10px;"><strong>4. Security & Encryption</strong><br>
           We implement industry-standard encryption protocols to protect your personal and financial information. We do not sell or share your data with unauthorized third parties.</p>
           
           <p style="margin-bottom: 10px;"><strong>5. Contact Support</strong><br>
-          For any data protection inquiries, email us at <a href="mailto:customer@talaplus.ke" style="color: #0f766e; text-decoration: underline;">customer@talaplus.ke</a>.</p>
+          For any data protection inquiries, email us at <a href="mailto:customer@ZenkaPlus.ke" style="color: #0f766e; text-decoration: underline;">customer@ZenkaPlus.ke</a>.</p>
         </div>
       `,
       confirmButtonText: 'I Understand',
@@ -530,7 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (elapsed > SEVEN_DAYS_MS) {
         localStorage.removeItem(STORAGE_KEY_DATA);
         localStorage.removeItem(STORAGE_KEY_TIME);
-        console.log('TalaPlus: Expired localStorage progress cleared (older than 7 days).');
+        console.log('ZenkaPlus: Expired localStorage progress cleared (older than 7 days).');
       }
     }
   }
@@ -594,10 +594,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Run update display updates
         updateFormCalculations();
         updateHeroCalculations();
-        console.log('TalaPlus: Restored client profile from valid localStorage.');
+        console.log('ZenkaPlus: Restored client profile from valid localStorage.');
 
       } catch (err) {
-        console.error('TalaPlus: Error parsing localStorage data.', err);
+        console.error('ZenkaPlus: Error parsing localStorage data.', err);
       }
     }
   }
