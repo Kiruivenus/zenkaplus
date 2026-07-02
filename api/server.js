@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    Zenka Plus - BACKEND SERVER
    Serves static files + M-Pesa Daraja STK Push API integration
    No external npm dependencies - uses Node.js built-in modules only
@@ -56,7 +56,8 @@ const MPESA_PASSKEY          = process.env.MPESA_PASSKEY          || '';
 const MPESA_TRANSACTION_TYPE = process.env.MPESA_TRANSACTION_TYPE || 'CustomerBuyGoodsOnline';
 const MPESA_CALLBACK_URL     = process.env.MPESA_CALLBACK_URL     || '';
 
-const DARAJA_LIVE_BASE       = 'api.safaricom.co.ke';
+const MPESA_ENV             = process.env.MPESA_ENV || (MPESA_SHORTCODE === '174379' ? 'sandbox' : 'production');
+const DARAJA_LIVE_BASE       = MPESA_ENV === 'sandbox' ? 'sandbox.safaricom.co.ke' : 'api.safaricom.co.ke';
 
 // Dynamic configuration cache
 const dynamicConfig = {
