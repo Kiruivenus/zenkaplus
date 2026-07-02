@@ -4,29 +4,29 @@
 
 /* Design Tokens & Theme Variables */
 :root {
-  /* Harmonious Color Palette - ZenkaPlus Modern Fintech System */
-  --primary: #137A3B;         /* Primary Green */
-  --primary-dark: #0F6A33;    /* Primary Hover */
-  --primary-light: #EAF7EF;   /* Primary Light */
-  --accent: #137A3B;
-  --accent-light: #EAF7EF;
-  --accent-glow: rgba(19, 122, 59, 0.12);
+  /* Harmonious Color Palette - ZenkaPlus Premium Orange System */
+  --primary: #D9540D;         /* Primary Orange */
+  --primary-dark: #C24608;    /* Primary Hover */
+  --primary-light: #FFF5EF;   /* Primary Light */
+  --accent: #D9540D;
+  --accent-light: #FFF5EF;
+  --accent-glow: rgba(217, 84, 13, 0.12);
 
   /* Secondary Accents */
-  --trust-blue: #137A3B;
-  --trust-blue-dark: #0F6A33;
+  --trust-blue: #D9540D;
+  --trust-blue-dark: #C24608;
   --gold-accent: #F59E0B;     /* Warning */
   --gold-hover: #D97706;
 
-  --bg-main: #F8FAF9;         /* Background */
-  --bg-secondary: #F0F4F2;    /* Soft gray-green wash */
+  --bg-main: #FAF9F8;         /* Background */
+  --bg-secondary: #F5F3F0;    /* Warm grey-orange wash */
   --card-bg: #FFFFFF;         /* Card Background */
-  --border-color: #E5E7EB;     /* Border */
+  --border-color: #EAE8E6;     /* Border */
 
   /* Text colors */
-  --text-main: #1F2937;       /* Primary Text */
-  --text-secondary: #4B5563;  /* Dark grey copy */
-  --text-muted: #6B7280;      /* Secondary Text */
+  --text-main: #1F2421;       /* Primary Text */
+  --text-secondary: #4E524F;  /* Dark grey copy */
+  --text-muted: #667069;      /* Secondary Text */
 
   /* System States */
   --error-color: #EF4444;     /* Danger */
