@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    Zenka Plus - MAIN APPLICATION LOGIC
    ========================================================================== */
 
@@ -6,17 +6,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- CLIENT CONFIGURATION STATE ---
   let clientConfig = {
-    exciseDuty: 187
+    exciseDuty: 187,
+    minLoanLimit: 500,
+    maxLoanLimit: 17000
   };
+
+  function formatKsh(amount) {
+    return 'KES ' + Number(amount).toLocaleString('en-KE');
+  }
 
   async function fetchPublicConfig() {
     try {
       const response = await fetch('/api/config');
       if (response.ok) {
         const data = await response.json();
+        let changed = false;
         if (data && data.exciseDuty) {
           clientConfig.exciseDuty = parseInt(data.exciseDuty, 10);
           updateExciseTextsInUI();
+        }
+        if (data && data.minLoanLimit !== undefined) {
+          clientConfig.minLoanLimit = parseInt(data.minLoanLimit, 10);
+          changed = true;
+        }
+        if (data && data.maxLoanLimit !== undefined) {
+          clientConfig.maxLoanLimit = parseInt(data.maxLoanLimit, 10);
+          changed = true;
+        }
+        if (changed) {
+          updateLoanLimitsInUI();
         }
       }
     } catch (err) {
@@ -36,6 +54,71 @@ document.addEventListener('DOMContentLoaded', () => {
     if (metaDesc) {
       const current = metaDesc.getAttribute('content');
       metaDesc.setAttribute('content', current.replace(/187/g, clientConfig.exciseDuty));
+    }
+  }
+
+  function updateLoanLimitsInUI() {
+    const min = clientConfig.minLoanLimit;
+    const max = clientConfig.maxLoanLimit;
+    const mid = Math.round((min + max) / 2);
+
+    // Update Slider limits
+    const heroSlider = document.getElementById('hero-loan-slider');
+    const formSlider = document.getElementById('loanAmountSlider');
+
+    if (heroSlider) {
+      heroSlider.min = min;
+      heroSlider.max = max;
+      // Set to value if it goes outside range
+      const val = parseInt(heroSlider.value, 10);
+      if (val < min) heroSlider.value = min;
+      else if (val > max) heroSlider.value = max;
+    }
+
+    if (formSlider) {
+      formSlider.min = min;
+      formSlider.max = max;
+      const val = parseInt(formSlider.value, 10);
+      if (val < min) formSlider.value = min;
+      else if (val > max) formSlider.value = max;
+    }
+
+    // Update labels in UI
+    const sliderMinLabel = document.getElementById('slider-min-label');
+    const sliderMidLabel = document.getElementById('slider-mid-label');
+    const sliderMaxLabel = document.getElementById('slider-max-label');
+    const formMinLabel = document.getElementById('form-slider-min-label');
+    const formMaxLabel = document.getElementById('form-slider-max-label');
+
+    if (sliderMinLabel) sliderMinLabel.textContent = formatKsh(min);
+    if (sliderMidLabel) sliderMidLabel.textContent = formatKsh(mid);
+    if (sliderMaxLabel) sliderMaxLabel.textContent = formatKsh(max);
+    if (formMinLabel) formMinLabel.textContent = 'Ksh ' + min.toLocaleString('en-KE');
+    if (formMaxLabel) formMaxLabel.textContent = 'Ksh ' + max.toLocaleString('en-KE');
+
+    // Update other text occurrences
+    document.querySelectorAll('.loan-min-val').forEach(el => {
+      el.textContent = 'Ksh ' + min.toLocaleString('en-KE');
+    });
+    document.querySelectorAll('.loan-max-val').forEach(el => {
+      el.textContent = 'Ksh ' + max.toLocaleString('en-KE');
+    });
+
+    // Update SEO meta descriptions dynamically
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      let content = metaDesc.getAttribute('content');
+      content = content.replace(/17,000/g, max.toLocaleString('en-KE'));
+      content = content.replace(/500/g, min.toLocaleString('en-KE'));
+      metaDesc.setAttribute('content', content);
+    }
+
+    // Trigger recalculation math to update calculations dynamically
+    if (typeof updateHeroCalculations === 'function') {
+      updateHeroCalculations();
+    }
+    if (typeof updateFormCalculations === 'function') {
+      updateFormCalculations();
     }
   }
 
@@ -290,10 +373,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const heroTotalVal = document.getElementById('hero-total-val');
   const heroPeriodTabs = document.querySelectorAll('.hero-section .period-tab');
   let selectedHeroPeriod = 1; // Default 1 month
-
-  function formatKsh(amount) {
-    return 'KES ' + Number(amount).toLocaleString('en-KE');
-  }
 
   // Update Hero Calculator Math
   function updateHeroCalculations() {

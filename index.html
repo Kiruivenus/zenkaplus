@@ -219,9 +219,9 @@
                     <input type="range" id="hero-loan-slider" min="500" max="17000" step="500" value="10000"
                       class="range-slider">
                     <div class="slider-min-max">
-                      <span>KES 500</span>
-                      <span>KES 8,500</span>
-                      <span>KES 17,000</span>
+                      <span id="slider-min-label">KES 500</span>
+                      <span id="slider-mid-label">KES 8,500</span>
+                      <span id="slider-max-label">KES 17,000</span>
                     </div>
                   </div>
 
@@ -567,7 +567,7 @@
               <div class="advantage-card-body text-center">
                 <h3>Double your limits fast</h3>
                 <p>Most customers double their loan limit in just two months. Repay on time to see your loan limit grow
-                  to KSh 17,000.</p>
+                  to <span class="loan-max-val">KSh 17,000</span>.</p>
               </div>
             </div>
 
@@ -698,7 +698,7 @@
             <div class="rates-table-disclosure" id="rates">
               <h3>LOAN RATES AND FEES</h3>
               <ul>
-                <li><strong>Loan Amounts:</strong> Ksh 500 to Ksh 17,000</li>
+                <li><strong>Loan Amounts:</strong> <span class="loan-min-val">Ksh 500</span> to <span class="loan-max-val">Ksh 17,000</span></li>
                 <li><strong>MINIMUM loan repayment period:</strong> 61 days including extend</li>
                 <li><strong>MAXIMUM loan repayment period:</strong> 365 days including loan extend.</li>
                 <li><strong>MINIMUM annual percentage rate (APR) including discount:</strong> 3.65%</li>
@@ -768,7 +768,7 @@
               <h3>ZenkaPlus vs. Traditional Zenka Loans</h3>
               <p>While standard mobile loan apps offer generic micro-loans, <strong>ZenkaPlus</strong> delivers a
                 premium, highly flexible alternative. We accommodate higher initial limits starting from a minimum of
-                <strong>Ksh 500 up to Ksh 17,000</strong>. By employing automated credit profiling models, we evaluate
+                <strong><span class="loan-min-val">Ksh 500</span> up to <span class="loan-max-val">Ksh 17,000</span></strong>. By employing automated credit profiling models, we evaluate
                 eligibility instantly. Furthermore, we charge a low, flat 9.8% monthly interest rate and require a
                 standard regulatory KSh <span class="excise-val">187</span> fixed excise duty to authorize quick disbursements, guaranteeing full
                 transparency with zero hidden commissions.</p>
@@ -1011,8 +1011,8 @@
                   <input type="range" id="loanAmountSlider" min="500" max="17000" step="500" value="10000"
                     class="range-slider">
                   <div class="slider-min-max">
-                    <span>Ksh 500</span>
-                    <span>Ksh 17,000</span>
+                    <span id="form-slider-min-label">Ksh 500</span>
+                    <span id="form-slider-max-label">Ksh 17,000</span>
                   </div>
                 </div>
 

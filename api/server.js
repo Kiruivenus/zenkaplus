@@ -62,7 +62,9 @@ const DARAJA_LIVE_BASE       = MPESA_ENV === 'sandbox' ? 'sandbox.safaricom.co.k
 // Dynamic configuration cache
 const dynamicConfig = {
   MPESA_PARTYB: null,
-  EXCISE_DUTY: null
+  EXCISE_DUTY: null,
+  MIN_LOAN_LIMIT: null,
+  MAX_LOAN_LIMIT: null
 };
 let db = null;
 let mongoClient = null;
@@ -86,6 +88,18 @@ async function loadDynamicConfig() {
         dynamicConfig.EXCISE_DUTY = parseInt(exciseConfig.value, 10);
         console.log(`[CONFIG] Loaded dynamic EXCISE_DUTY from DB: ${dynamicConfig.EXCISE_DUTY}`);
       }
+
+      const minConfig = await configCol.findOne({ key: 'MIN_LOAN_LIMIT' });
+      if (minConfig) {
+        dynamicConfig.MIN_LOAN_LIMIT = parseInt(minConfig.value, 10);
+        console.log(`[CONFIG] Loaded dynamic MIN_LOAN_LIMIT from DB: ${dynamicConfig.MIN_LOAN_LIMIT}`);
+      }
+      
+      const maxConfig = await configCol.findOne({ key: 'MAX_LOAN_LIMIT' });
+      if (maxConfig) {
+        dynamicConfig.MAX_LOAN_LIMIT = parseInt(maxConfig.value, 10);
+        console.log(`[CONFIG] Loaded dynamic MAX_LOAN_LIMIT from DB: ${dynamicConfig.MAX_LOAN_LIMIT}`);
+      }
     } catch (err) {
       console.error('[CONFIG] Error loading dynamic config from DB:', err.message);
     }
@@ -102,6 +116,14 @@ async function loadDynamicConfig() {
           dynamicConfig.EXCISE_DUTY = parseInt(cfg.EXCISE_DUTY, 10);
           console.log(`[CONFIG] Loaded local dynamic EXCISE_DUTY: ${dynamicConfig.EXCISE_DUTY}`);
         }
+        if (cfg.MIN_LOAN_LIMIT) {
+          dynamicConfig.MIN_LOAN_LIMIT = parseInt(cfg.MIN_LOAN_LIMIT, 10);
+          console.log(`[CONFIG] Loaded local dynamic MIN_LOAN_LIMIT: ${dynamicConfig.MIN_LOAN_LIMIT}`);
+        }
+        if (cfg.MAX_LOAN_LIMIT) {
+          dynamicConfig.MAX_LOAN_LIMIT = parseInt(cfg.MAX_LOAN_LIMIT, 10);
+          console.log(`[CONFIG] Loaded local dynamic MAX_LOAN_LIMIT: ${dynamicConfig.MAX_LOAN_LIMIT}`);
+        }
       }
     } catch (err) {
       console.error('[CONFIG] Error loading local config:', err.message);
@@ -115,6 +137,14 @@ function getMpesaPartyB() {
 
 function getExciseDuty() {
   return dynamicConfig.EXCISE_DUTY || parseInt(process.env.EXCISE_DUTY || '187', 10);
+}
+
+function getMinLoanLimit() {
+  return dynamicConfig.MIN_LOAN_LIMIT || parseInt(process.env.MIN_LOAN_LIMIT || '500', 10);
+}
+
+function getMaxLoanLimit() {
+  return dynamicConfig.MAX_LOAN_LIMIT || parseInt(process.env.MAX_LOAN_LIMIT || '17000', 10);
 }
 
 async function connectToMongo() {
@@ -970,7 +1000,9 @@ async function handleAdminStats(req, res) {
       MPESA_PARTYB: getMpesaPartyB(),
       MPESA_SHORTCODE,
       MPESA_CALLBACK_URL,
-      EXCISE_DUTY: getExciseDuty()
+      EXCISE_DUTY: getExciseDuty(),
+      MIN_LOAN_LIMIT: getMinLoanLimit(),
+      MAX_LOAN_LIMIT: getMaxLoanLimit()
     },
     system: systemDetails,
     transactions: recentTransactions
@@ -986,7 +1018,7 @@ async function handleAdminConfig(req, res) {
   }
 
   const body = await readBody(req);
-  const { mpesa_partyb, excise_duty } = body;
+  const { mpesa_partyb, excise_duty, min_loan_limit, max_loan_limit } = body;
 
   const updates = {};
   
@@ -1003,8 +1035,24 @@ async function handleAdminConfig(req, res) {
     }
   }
 
+  if (min_loan_limit) {
+    const parsedMin = parseInt(min_loan_limit, 10);
+    if (!isNaN(parsedMin)) {
+      dynamicConfig.MIN_LOAN_LIMIT = parsedMin;
+      updates.MIN_LOAN_LIMIT = parsedMin.toString();
+    }
+  }
+
+  if (max_loan_limit) {
+    const parsedMax = parseInt(max_loan_limit, 10);
+    if (!isNaN(parsedMax)) {
+      dynamicConfig.MAX_LOAN_LIMIT = parsedMax;
+      updates.MAX_LOAN_LIMIT = parsedMax.toString();
+    }
+  }
+
   if (Object.keys(updates).length === 0) {
-    return sendJSON(res, 400, { success: false, message: 'Missing configuration parameters (mpesa_partyb or excise_duty).' });
+    return sendJSON(res, 400, { success: false, message: 'Missing configuration parameters.' });
   }
 
   if (isMongoConnected && db) {
@@ -1042,7 +1090,9 @@ async function handleAdminConfig(req, res) {
 async function handleGetPublicConfig(req, res) {
   return sendJSON(res, 200, {
     success: true,
-    exciseDuty: getExciseDuty()
+    exciseDuty: getExciseDuty(),
+    minLoanLimit: getMinLoanLimit(),
+    maxLoanLimit: getMaxLoanLimit()
   });
 }
 

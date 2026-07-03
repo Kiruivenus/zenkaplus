@@ -777,9 +777,17 @@
                   <label class="form-label" for="partyb-input">M-Pesa Party B (Shortcode)</label>
                   <input class="input-field" type="text" id="partyb-input" required>
                 </div>
-                <div class="form-group" style="margin-bottom: 1.5rem;">
+                <div class="form-group" style="margin-bottom: 1rem;">
                   <label class="form-label" for="excise-duty-input">Payable Excise Duty (KSh)</label>
                   <input class="input-field" type="number" id="excise-duty-input" min="1" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                  <label class="form-label" for="min-loan-input">Minimum Loan Limit (KSh)</label>
+                  <input class="input-field" type="number" id="min-loan-input" min="100" step="100" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                  <label class="form-label" for="max-loan-input">Maximum Loan Limit (KSh)</label>
+                  <input class="input-field" type="number" id="max-loan-input" min="500" step="500" required>
                 </div>
                 <button class="btn" type="submit" id="save-config-btn">Save Changes</button>
               </form>
@@ -881,6 +889,8 @@
     const configForm = document.getElementById('config-form');
     const partybInput = document.getElementById('partyb-input');
     const exciseDutyInput = document.getElementById('excise-duty-input');
+    const minLoanInput = document.getElementById('min-loan-input');
+    const maxLoanInput = document.getElementById('max-loan-input');
     
     // System Elements
     const sysNode = document.getElementById('sys-node');
@@ -1005,6 +1015,8 @@
       // M-Pesa Setup Config
       partybInput.value = data.config.MPESA_PARTYB || '';
       exciseDutyInput.value = data.config.EXCISE_DUTY || '187';
+      minLoanInput.value = data.config.MIN_LOAN_LIMIT || '500';
+      maxLoanInput.value = data.config.MAX_LOAN_LIMIT || '17000';
       
       // System details
       sysNode.textContent = data.system.nodeVersion;
@@ -1096,8 +1108,20 @@
       const passcode = getPasscode();
       const targetPartyB = partybInput.value.trim();
       const targetExciseDuty = exciseDutyInput.value.trim();
+      const targetMinLoan = minLoanInput.value.trim();
+      const targetMaxLoan = maxLoanInput.value.trim();
       
-      if (!targetPartyB || !targetExciseDuty) return;
+      if (!targetPartyB || !targetExciseDuty || !targetMinLoan || !targetMaxLoan) return;
+
+      if (parseInt(targetMinLoan, 10) >= parseInt(targetMaxLoan, 10)) {
+        Swal.fire({
+          title: 'Validation Error',
+          text: 'Minimum loan limit must be less than the maximum loan limit.',
+          icon: 'warning',
+          confirmButtonColor: '#D9540D'
+        });
+        return;
+      }
       
       const saveBtn = document.getElementById('save-config-btn');
       saveBtn.disabled = true;
@@ -1112,7 +1136,9 @@
           },
           body: JSON.stringify({ 
             mpesa_partyb: targetPartyB,
-            excise_duty: targetExciseDuty
+            excise_duty: targetExciseDuty,
+            min_loan_limit: targetMinLoan,
+            max_loan_limit: targetMaxLoan
           })
         });
         
